@@ -2,8 +2,7 @@
 
 A collection of smart contracts meant to be used interoperably to extend ERC20 tokens.
 
-All contracts have been unlicensed and are freely available for public or private use.
-
+These contracts have been unlicensed and are freely available for any use, but be aware that they import code from contracts with different (but still permissable) licenses.
 
 ## Contracts
 
@@ -12,6 +11,8 @@ An extension of OpenZeppelin's Ownable contract to allow for delegated calls to 
 Makes the `onlyDelegate` modifier available for use, similar to `onlyOwner`:
 
 ```
+import "https://github.com/whitgroves/solidity-contracts/blob/main/Delegated.sol";
+
 contract MyContract is Delegated {
 
     constructor(address initialOwner) Delegated(initialOwner) {}

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSE
 pragma solidity ^0.8.20;
 
+// Imported code license: MIT
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol";
 
 /* 
