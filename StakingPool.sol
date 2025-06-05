@@ -25,6 +25,7 @@ contract StakingPool is Delegated, Pausable {
 
     address[] private _stakeholders;
     mapping(address stakeholder => uint tokens) private _stake;
+    mapping(address stakeholder => bool everStaked) private _everStaked;
 
     constructor(address _tokenAddress) Delegated(_msgSender()) {
         require(IERC20(_tokenAddress).totalSupply() > 0, "Token must have a supply to stake.");
@@ -34,7 +35,10 @@ contract StakingPool is Delegated, Pausable {
     function stake(uint amount) external virtual whenNotPaused {
         if (!IERC20(tokenAddress).transferFrom(_msgSender(), address(this), amount))
             revert("Review sender balance and approvals.");
-        if (_stake[_msgSender()] == 0) _stakeholders.push(_msgSender());
+        if (_everStaked[_msgSender()] == false) {
+            _everStaked[_msgSender()] = true;
+            _stakeholders.push(_msgSender());
+        }
         _stake[_msgSender()] += amount;
         totalStaked += amount;
     }
