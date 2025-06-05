@@ -9,9 +9,9 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contr
  * In effect, this is a lightweight version of AccessControl that makes the onlyDelegates modifier available
  * to inherited contracts.
  */
-contract Delegated is Ownable {
+abstract contract Delegated is Ownable {
 
-    mapping(address delegate => bool isActive) private _delegates;
+    mapping(address delegate => bool isActive) internal _delegates;
 
     error DelegatedUnauthorizedAccount(address account);
     error DelegatedInvalidDelegate(address delegate);

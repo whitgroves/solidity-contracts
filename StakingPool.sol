@@ -16,16 +16,16 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contr
  * The staking pool is paused by default, and can only be unpaused by the owner. 
  * A retired pool cannot be unpaused.
  */
-contract StakingPool is Delegated, Pausable {
+abstract contract StakingPool is Delegated, Pausable {
     
     bool public active;
     bool public retired;
     address public tokenAddress;
     uint public totalStaked;
 
-    address[] private _stakeholders;
-    mapping(address stakeholder => uint tokens) private _stake;
-    mapping(address stakeholder => bool everStaked) private _everStaked;
+    address[] internal _stakeholders;
+    mapping(address stakeholder => uint tokens) internal _stake;
+    mapping(address stakeholder => bool everStaked) internal _everStaked;
 
     constructor(address _tokenAddress) Delegated(_msgSender()) {
         require(IERC20(_tokenAddress).totalSupply() > 0, "Token must have a supply to stake.");
@@ -44,17 +44,17 @@ contract StakingPool is Delegated, Pausable {
     }
     
     function unstake(uint amount) external virtual {
-        require(amount <= _stake[_msgSender()], "Amount exceeds stake size.");
+        require(amount <= stakeSize(), "Amount exceeds stake size.");
         if (!IERC20(tokenAddress).transfer(_msgSender(), amount)) revert("Unstaking transaction failed.");
         _stake[_msgSender()] -= amount;
         totalStaked -= amount;
     }
 
-    function stakeSize() external view returns (uint) {
+    function stakeSize() public virtual view returns (uint) {
         return _stake[_msgSender()];
     }
 
-    function stakeSizeFor(address stakeholder) external view onlyDelegate returns (uint) {
+    function stakeSizeFor(address stakeholder) external virtual view onlyDelegate returns (uint) {
         return _stake[stakeholder];
     }
 
