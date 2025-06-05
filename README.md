@@ -7,7 +7,7 @@ These contracts have been unlicensed and are freely available for any use, but b
 ## Contract Extensions
 
 ### Delegated
-An extension of OpenZeppelin's Ownable contract to allow for delegated calls to contract functions. 
+An extension of OpenZeppelin's [Ownable](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol) contract to allow for delegated calls to contract functions. 
 Makes the `onlyDelegate` modifier available for use, similar to `onlyOwner`:
 
 ```
@@ -31,7 +31,7 @@ A revision of [StakingPool](https://github.com/whitgroves/staking-pool) using in
 To use, deploy the contract pointing to the contract address for the ERC20 token you want to setup staking for, then transfer and distribute funds as needed. Secondary contracts can be added as delegates to automate the distribution process entirely on-chain.
 
 ### ManagedSupplyERC20
-An extension of OpenZeppelin's ERC20 which implements a manually adjustable tax, automatic burn rate, and a delegated minting function, which is restricted by the token's target supply. The contract is abstract, but can be subclassed and deployed rather easily:
+An extension of OpenZeppelin's [ERC20](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol) contract which implements a manually adjustable tax, automatic burn rate, and delegated minting function restricted by the token's target supply. The contract is abstract, but can be subclassed and deployed rather easily:
 ```
 import "https://github.com/whitgroves/solidity-contracts/blob/main/ManagedSupplyERC20.sol";
 
@@ -42,4 +42,8 @@ contract TestToken is ManagedSupplyERC20 {
 }
 ```
 
-Note that while the tax rate is adjustable, the contract will soft-enforce a 20% tax + burn rate on transactions; if this is not desired, you will need to override `setTaxRate()` and `burnRate()` in your implementation, or raise the target supply cap until the burn rate drops. 
+After that, the contract will behave as a standard ERC20 token, except that up to 20% of each transaction may be diverted to an address set by `setTaxAddress()` or burned to maintain the supply target set by `setTargetSupply()`.
+
+Because the 20% limit is shared and enforced by `setTaxRate()` and `burnRate()`, high inflation will prevent raises in the tax rate, and a high tax rate will throttle the burn rate until the supply reaches its target.
+
+In addition, the public `mint()` function wraps ERC20's `_mint()` so the contract owner or their delegates can create additional tokens, but does not allow increases above the target supply; if more tokens are needed, the owner will need to increase the supply target, which will emit the `SupplyTargetChanged` event for any off-chain listeners.

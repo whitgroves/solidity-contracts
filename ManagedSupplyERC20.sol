@@ -17,6 +17,9 @@ abstract contract ManagedSupplyERC20 is ERC20, Delegated, Pausable {
     uint8 public taxRate;
     uint256 public targetSupply;
 
+    event SupplyTargetChanged(uint256 previousTarget, uint256 newTarget, uint256 currentSupply);
+    event TaxAddressChanged(address previousAddress, address newAddress);
+
     constructor(string memory name_, string memory symbol_, address initialOwner, uint256 targetSupply_) 
         ERC20(name_, symbol_) 
         Delegated(initialOwner) 
@@ -26,12 +29,16 @@ abstract contract ManagedSupplyERC20 is ERC20, Delegated, Pausable {
 
     function setTargetSupply(uint256 targetSupply_) public virtual onlyOwner {
         require (targetSupply_ > 0, "The target supply must be at least 1.");
+        uint256 previousTarget = targetSupply;
         targetSupply = targetSupply_;
+        emit SupplyTargetChanged(previousTarget, targetSupply, totalSupply());
     }
 
     function setTaxAddress(address taxAddress_) public virtual onlyOwner {
         if (taxAddress_ == address(0)) revert("Tax address cannot be zero address.");
+        address previousAddress = taxAddress;
         taxAddress = taxAddress_;
+        emit TaxAddressChanged(previousAddress, taxAddress);
     }
 
     function setTaxRate(uint8 taxRate_) external virtual onlyDelegate {
