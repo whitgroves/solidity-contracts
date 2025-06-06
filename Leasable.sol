@@ -6,22 +6,25 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contr
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
 
 /* 
- * An extension of OpenZeppelin's Ownable contract that allows ownership access to be leased out in exchange for
- * ERC20 tokens at a price set by the contract owner. The contract supports prices in multiple tokens, although
- * payment must be made in a single currency. After the lease ends, ownership access will expire automatically.
+ * An extension of OpenZeppelin's Ownable contract that allows ownership access to be leased out on a daily basis
+ * in exchange for ERC20 tokens at a price set by the contract owner. The contract supports prices in multiple tokens,
+ * although payment must be made in a single currency. 
+ * 
+ * After the lease ends, ownership reverts automatically, but the lease can be revoked at any time by the owner in
+ * exchange for a refund of the remaining time in the original currency.
  */
 abstract contract Leasable is Ownable {
 
-    uint256 public maxLeaseSeconds;
-    mapping(address currency => uint256 amount) public pricePerSecond;
+    uint public maxLeaseDays;
+    mapping(address currency => uint amount) public pricePerDay;
     
     address private _tenant;
-    uint256 private _leaseEnd;
+    uint private _leaseEnd;
     address private _leaseCurrency;
 
     error LeasableUnauthorizedAccount(address account);
 
-    event ContractLeased(address tenant, uint256 leaseEnd);
+    event ContractLeased(address tenant, uint leaseEnd);
     event LeaseRevoked(address tenant, address owner);
     
     constructor(address initialOwner) Ownable(initialOwner) {
@@ -29,32 +32,48 @@ abstract contract Leasable is Ownable {
     }
 
     // This can be set to any value, but 0 will allow for unlimited time.
-    function setMaxLeaseSeconds(uint256 maxLeaseSeconds_) public virtual onlyOwner notWhileLeased {
-        maxLeaseSeconds = maxLeaseSeconds_;
+    function setMaxLeaseDays(uint maxLeaseDays_) public virtual onlyOwner notWhileLeased {
+        maxLeaseDays = maxLeaseDays_;
     }
 
     // Setting the price to 0 removes that currency as an option.
-    function setLeasePrice(address currency, uint256 pricePerSecond_) public virtual onlyOwner notWhileLeased {
+    function setLeasePrice(address currency, uint pricePerDay_) public virtual onlyOwner notWhileLeased {
         require(IERC20(currency).totalSupply() > 0, "Price can only be set for a token with a supply.");
-        pricePerSecond[currency] = pricePerSecond_;
+        pricePerDay[currency] = pricePerDay_;
     }
 
-    function startLease(address tenant_, address currency, uint256 leaseSeconds) public virtual notWhileLeased {
-        require(leaseSeconds > 0, "Must lease for a specified amount of time.");
-        if (maxLeaseSeconds > 0 && leaseSeconds > maxLeaseSeconds) revert("Contract not leasable for requested time.");
-        uint256 leasePrice = pricePerSecond[currency] * leaseSeconds;
+    function startLease(address currency, uint leaseDays) public virtual {
+        _lease(_msgSender(), currency, leaseDays);
+    }
+
+    function startLeaseFor(address tenant_, address currency, uint leaseDays) public virtual {
+        _lease(tenant_, currency, leaseDays);
+    }
+
+    function _lease(address tenant_, address currency, uint leaseDays) internal virtual notWhileLeased {
+        require(leaseDays > 0, "Must lease for a specified amount of time.");
+        if (maxLeaseDays > 0 && leaseDays > maxLeaseDays) revert("Contract not leasable for requested time.");
+        uint leasePrice = pricePerDay[currency] * leaseDays;
         if (leasePrice == 0) revert("Contract not leasable in requested currency.");
         if (!IERC20(currency).transferFrom(tenant_, owner(), leasePrice))
             revert("Lease denied. Review sender balance and approvals.");
         _tenant = tenant_;
-        _leaseEnd = block.timestamp + leaseSeconds;
+        _leaseEnd = block.timestamp + (leaseDays * 1 days);
         _leaseCurrency = currency;
         emit ContractLeased(_tenant, _leaseEnd);
     }
 
-    function revokeLease() public virtual whileLeased onlyOriginalOwner {
-        uint256 secondsRemaining = _leaseEnd - block.timestamp;
-        uint256 refund = pricePerSecond[_leaseCurrency] * secondsRemaining;
+    function revokeLease() public virtual onlyOriginalOwner {
+        _revoke();
+    }
+
+    function terminateLease() public virtual onlyOwner {
+        _revoke();
+    }
+
+    function _revoke() internal virtual whileLeased {
+        uint daysRemaining = (_leaseEnd - block.timestamp) / 1 days;
+        uint refund = pricePerDay[_leaseCurrency] * daysRemaining;
         if (!IERC20(_leaseCurrency).transferFrom(owner(), _tenant, refund))
             revert("Revocation denied. Review sender balance and approvals.");
         _leaseEnd = block.timestamp;
