@@ -7,8 +7,7 @@ These contracts have been unlicensed and are freely available for any use, but b
 ## Contract Extensions
 
 ### Delegated
-An extension of OpenZeppelin's [Ownable](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol) contract to allow for delegated calls to contract functions. 
-Makes the `onlyDelegate` modifier available for use, similar to `onlyOwner`:
+An extension of OpenZeppelin's [Ownable](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol) contract which adds the `onlyDelegate` modifier for privileged calls to certain contract functions, while preserving `onlyOwner` for more restricted access: 
 
 ```
 import "https://github.com/whitgroves/solidity-contracts/blob/main/Delegated.sol";
@@ -17,16 +16,16 @@ contract MyContract is Delegated {
 
     constructor(address initialOwner) Delegated(initialOwner) {}
 
-    function restrictedFunction() public onlyOwner { ... }
+    function burn(...) public onlyDelegate { ... }
 
-    function delegatedFunction() public onlyDelegate { ... }
+    function mint(...) public onlyOwner { ... }
 }
 ```
 
 ### Leasable
 An extension of OpenZeppelin's [Ownable](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol) contract that allows ownership access for a smart contract to be leased out on a daily basis in exchange for ERC20 tokens at a price set by the contract owner.
 
-Under the hood, internal members of Ownable have been overriden so the existing `onlyOwner` modifier will treat the current tenant as the owner, while making `onlyOriginalOwner` available for functions that should not be leased out:
+Under the hood, internal members of Ownable have been overriden so the existing `onlyOwner` modifier will treat the current tenant as the owner, while making `whileLeased`, `whileNotLeased`, and `onlyOriginalOwner` available for control over which functions should be accessible to borrowers:
 ```
 import "https://github.com/whitgroves/solidity-contracts/blob/main/Leasable.sol";
 
@@ -34,9 +33,9 @@ contract MyContract is Leasable {
 
     constructor(address initialOwner) Leasable(initialOwner) {}
 
-    function updateAddresses() public onlyOwner { ... }
+    function updateConnections(...) public whileLeased onlyOwner { ... }
 
-    function transferOwnership() public onlyOriginalOwner { ... }
+    function transferOwnership(...) public notWhileLeased onlyOriginalOwner { ... }
 }
 ```
 The contract can be leased out directly or by proxy via `startLease()` and `startLeaseFor()`, although both require a spending allowance by the tenant so the Leasable contract can transfer funds.
