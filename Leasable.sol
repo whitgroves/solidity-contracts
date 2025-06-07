@@ -33,21 +33,21 @@ abstract contract Leasable is Delegated {
     }
 
     // This can be set to any value, but 0 will allow for unlimited time.
-    function setMaxLeaseDays(uint maxLeaseDays_) public virtual onlyOwner notWhileLeased {
+    function setMaxLeaseDays(uint maxLeaseDays_) external virtual onlyDelegate notWhileLeased {
         maxLeaseDays = maxLeaseDays_;
     }
 
     // Setting the price to 0 removes that currency as an option.
-    function setLeasePrice(address currency, uint pricePerDay_) public virtual onlyOwner notWhileLeased {
+    function setLeasePrice(address currency, uint pricePerDay_) external virtual onlyDelegate notWhileLeased {
         require(IERC20(currency).totalSupply() > 0, "Price can only be set for a token with a supply.");
         pricePerDay[currency] = pricePerDay_;
     }
 
-    function startLease(address currency, uint leaseDays) public virtual {
+    function startLease(address currency, uint leaseDays) external virtual {
         _lease(_msgSender(), currency, leaseDays);
     }
 
-    function startLeaseFor(address tenant_, address currency, uint leaseDays) public virtual {
+    function startLeaseFor(address tenant_, address currency, uint leaseDays) external virtual {
         _lease(tenant_, currency, leaseDays);
     }
 
@@ -64,11 +64,11 @@ abstract contract Leasable is Delegated {
         emit ContractLeased(_tenant, _leaseEnd);
     }
 
-    function revokeLease() public virtual onlyOriginalOwner {
+    function revokeLease() external virtual onlyOriginalOwner {
         _revoke();
     }
 
-    function terminateLease() public virtual onlyOwner {
+    function terminateLease() external virtual onlyOwner {
         _revoke();
     }
 
@@ -100,6 +100,7 @@ abstract contract Leasable is Delegated {
         return (block.timestamp < _leaseEnd);
     }
 
+    // public (vs external) so subclasses have access
     function tenant() public view virtual returns (address) {
         if (isLeased()) return _tenant;
         else return address(0);

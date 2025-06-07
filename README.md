@@ -69,3 +69,8 @@ In addition, the public `mint()` function wraps ERC20's `_mint()` so the contrac
 
 ### ERC721
 My implementation of `IERC721`, with `mint()` and `burn()` functions added. Functionally a delegated version of OpenZeppelin's [`ERC721`](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/ERC721.sol) contract, except it doesn't implement `IERC721Metadata`. Created for extensibility of per-item access permissions.
+
+### LeasableERC721
+An extension of `ERC721` that implements `Leasable`-like permissions on individual tokens.
+
+Note that in contract to `Leasable`, approved operators will still have authority to act on each token, except to initiate transfers.
