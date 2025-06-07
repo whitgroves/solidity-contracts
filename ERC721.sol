@@ -8,9 +8,9 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contr
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/introspection/IERC165.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/IERC721Receiver.sol";
 
-abstract contract ERC721 is IERC721, IERC165, Delegated {
+abstract contract ERC721 is Delegated {
 
-    constant bytes4 private RECEIVER_HANDSHAKE = bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
+    bytes4 private constant RECEIVER_HANDSHAKE = bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
 
     mapping(address owner => uint amount) private _balances;
     mapping(uint tokenId => address owner) private _owners;
@@ -25,7 +25,15 @@ abstract contract ERC721 is IERC721, IERC165, Delegated {
     error ERC721UnauthorizedAccess(uint tokenId);
     error ERC721InvalidRecipient(uint tokenId);
 
-    constructor() {}
+    constructor(address initialOwner) Delegated(initialOwner) {}
+
+    function mint(address to, uint tokenId) external virtual onlyDelegate {
+        _update(address(0), _requireNonZeroAddress(to), tokenId);
+    }
+
+    function burn(uint tokenId) external virtual {
+        _update(_requireOwnership(tokenId), address(0), tokenId);
+    }
 
     // IERC721
 
@@ -56,11 +64,12 @@ abstract contract ERC721 is IERC721, IERC165, Delegated {
     }
 
     function getApproved(uint256 tokenId) external virtual view returns (address) {
-        return _approvals[_requireNonZeroAddress(_owners[tokenId])];
+        _requireNonZeroAddress(_owners[tokenId]);
+        return _approvals[tokenId];
     }
 
     function setApprovalForAll(address operator, bool _approved) external virtual {
-        address owner = _requireOwnership();
+        address owner = _msgSender();
         _operators[owner][operator] == _approved;
         emit ApprovalForAll(owner, operator, _approved);
     }
@@ -69,7 +78,16 @@ abstract contract ERC721 is IERC721, IERC165, Delegated {
         return _operators[_requireNonZeroAddress(owner)][operator];
     }
 
-    function _safeTransfer(address from, address to, uint256 tokenId, bytes calldata data) internal virtual {
+    // IERC165
+
+    function supportsInterface(bytes4 interfaceId) external virtual view returns (bool) {
+        return (interfaceId == type(IERC721).interfaceId ||
+                interfaceId == type(IERC165).interfaceId);
+    }
+
+    // internal 
+
+    function _safeTransfer(address from, address to, uint256 tokenId, bytes memory data) internal virtual {
         _transfer(from, to, tokenId);
         if (IERC721Receiver(to).onERC721Received(_msgSender(), from, tokenId, data) != RECEIVER_HANDSHAKE)
             revert ERC721InvalidRecipient(tokenId);
@@ -78,9 +96,13 @@ abstract contract ERC721 is IERC721, IERC165, Delegated {
     function _transfer(address from, address to, uint256 tokenId) internal virtual {
         _requireNonZeroAddress(to);
         if (from != _requireApproved(tokenId)) revert ERC721UnauthorizedAccess(tokenId);
-        _balances[from] -= 1;
+        _update(from, to, tokenId);
+    }
+
+    function _update(address from, address to, uint256 tokenId) internal virtual {
+        if (from != address(0))_balances[from] -= 1;
         _owners[tokenId] = to;
-        _balances[to] += 1;
+        if (to != address(0)) _balances[to] += 1;
         _approvals[tokenId] = address(0);
         emit Transfer(from, to, tokenId);
     }
@@ -90,15 +112,15 @@ abstract contract ERC721 is IERC721, IERC165, Delegated {
         return owner;
     }
 
-    function _requireApproved(uint tokenId) internal virtual pure returns (address) {
+    function _requireApproved(uint tokenId) internal virtual returns (address) {
         return _requireAuthorized(tokenId, false);
     }
 
-    function _requireOwnership(uint tokenId) internal virtual pure returns (address) {
+    function _requireOwnership(uint tokenId) internal virtual returns (address) {
         return _requireAuthorized(tokenId, true);
     }
 
-    function _requireAuthorized(uint tokenId, bool ownerOnly) internal virtual pure returns (address) {
+    function _requireAuthorized(uint tokenId, bool ownerOnly) internal virtual returns (address) {
         address sender = _msgSender();
         address owner = _requireNonZeroAddress(_owners[tokenId]);
         if (owner == sender) return owner;
@@ -106,12 +128,5 @@ abstract contract ERC721 is IERC721, IERC165, Delegated {
         if (sender != _approvals[tokenId] && _operators[owner][sender] == false) 
             revert ERC721UnauthorizedAccess(tokenId);
         return owner;
-    }
-
-    // IERC165
-
-    function supportsInterface(bytes4 interfaceId) external virtual view returns (bool) {
-        return (interfaceId == type(IERC721).interfaceId ||
-                interfaceId == type(IERC165).interfaceId);
     }
 }
