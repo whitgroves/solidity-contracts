@@ -23,11 +23,11 @@ abstract contract ERC721 is Delegated, IERC165, IERC721 {
 
     constructor(address initialOwner) Delegated(initialOwner) {}
 
-    function mint(address to, uint tokenId) external virtual onlyDelegate {
+    function mint(address to, uint tokenId) public virtual onlyDelegate {
         _update(address(0), _requireNonZeroAddress(to), tokenId);
     }
 
-    function burn(uint tokenId) external virtual {
+    function burn(uint tokenId) public virtual {
         _update(_requireOwnership(tokenId), address(0), tokenId);
     }
 
@@ -38,7 +38,7 @@ abstract contract ERC721 is Delegated, IERC165, IERC721 {
     }
 
     function ownerOf(uint256 tokenId) external virtual view returns (address) {
-        return _requireNonZeroAddress(_owners[tokenId]);
+        return _requireNonZeroAddress(_ownerOf(tokenId));
     }
 
     function transferFrom(address from, address to, uint256 tokenId) external virtual {
@@ -124,5 +124,10 @@ abstract contract ERC721 is Delegated, IERC165, IERC721 {
         if (sender != _approvals[tokenId] && _operators[owner][sender] == false) 
             revert ERC721UnauthorizedAccess(tokenId);
         return owner;
+    }
+
+    // added for extensibility of ownership while maintaining IERC721 interface
+    function _ownerOf(uint256 tokenId) internal virtual view returns (address) {
+        return _owners[tokenId];
     }
 }

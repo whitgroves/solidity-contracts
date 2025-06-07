@@ -73,4 +73,26 @@ My implementation of `IERC721`, with `mint()` and `burn()` functions added. Func
 ### LeasableERC721
 An extension of `ERC721` that implements `Leasable`-like permissions on individual tokens.
 
-Note that in contract to `Leasable`, approved operators will still have authority to act on each token, except to initiate transfers.
+Note that in constrast to `Leasable`, approved operators will still have authority to act on each token, except to initiate transfers.
+
+To make use of this extension, include a call to `_requireOwnership()` or `_requireApproved()` at the start of your subclass methods, which will restrict specific actions to owners and approved operators, while transferring that authority to the tenant while leased:
+
+```
+import {LeasableERC721} from "https://github.com/whitgroves/solidity-contracts/blob/main/LeasableERC721.sol";
+
+contract MyNFT is LeasableERC721 {
+
+    constructor(address initialOwner) LeasableERC721(initialOwner) {}
+
+    function updateStatus(..., uint tokenId) public {
+        _requireOwnership(tokenId);
+        ...
+    }
+
+    function updateMetadata(..., uint tokenId) public {
+        _requireOriginalOwnership(tokenId);
+        ...
+    }
+}
+```
+As shown above, `_requireOriginalOwnership()` is also available for actions which should be more restricted, including revocation of a token's lease.

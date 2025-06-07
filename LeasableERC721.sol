@@ -27,7 +27,9 @@ abstract contract LeasableERC721 is ERC721 {
     event ERC721TokenLeased(address tenant, uint leaseEnd, uint tokenId);
     event ERC721TokenLeaseRevoked(address tenant, address owner, uint tokenId);
 
-    function mint(address to, uint tokenId) external virtual override onlyDelegate {
+    constructor(address initialOwner) ERC721(initialOwner) {}
+
+    function mint(address to, uint tokenId) public virtual override onlyDelegate {
         super.mint(to, tokenId);
         _leaseEnd[tokenId] = block.timestamp;
     }
@@ -65,10 +67,11 @@ abstract contract LeasableERC721 is ERC721 {
         if (leasePrice == 0) revert("NFT not leasable in requested currency.");
         if (!IERC20(currency).transferFrom(tenant_, owner(), leasePrice))
             revert("Lease denied. Review sender balance and approvals.");
+        uint leaseEnd_ = block.timestamp + (leaseDays * 1 days);
         _tenant[tokenId] = tenant_;
-        _leaseEnd[tokenId] = block.timestamp + (leaseDays * 1 days);
+        _leaseEnd[tokenId] = leaseEnd_;
         _leaseCurrency[tokenId] = currency;
-        emit ERC721TokenLeased(_tenant, _leaseEnd, tokenId);
+        emit ERC721TokenLeased(tenant_, leaseEnd_, tokenId);
     }
 
     function revokeLease(uint tokenId) external virtual {
