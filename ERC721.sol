@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: UNLICENSE
 pragma solidity ^0.8.20;
 
-import "https://github.com/whitgroves/solidity-contracts/blob/main/Delegated.sol";
+import {Delegated} from "https://github.com/whitgroves/solidity-contracts/blob/main/Delegated.sol";
 
 // Imported code license: MIT
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/IERC721.sol";
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/introspection/IERC165.sol";
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/IERC721Receiver.sol";
+import {IERC165} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/introspection/IERC165.sol";
+import {IERC721} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/IERC721.sol";
+import {IERC721Receiver} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/IERC721Receiver.sol";
 
-abstract contract ERC721 is Delegated {
+abstract contract ERC721 is Delegated, IERC165, IERC721 {
 
     bytes4 private constant RECEIVER_HANDSHAKE = bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
 
@@ -16,10 +16,6 @@ abstract contract ERC721 is Delegated {
     mapping(uint tokenId => address owner) private _owners;
     mapping(uint tokenId => address proxy) _approvals;
     mapping(address owner => mapping(address proxy => bool approved)) private _operators;
-
-    event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
-    event Approval(address indexed _owner, address indexed _approved, uint256 indexed _tokenId);
-    event ApprovalForAll(address indexed _owner, address indexed _operator, bool _approved);
 
     error ERC721NonZeroAddressRequired();
     error ERC721UnauthorizedAccess(uint tokenId);

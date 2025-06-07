@@ -1,6 +1,6 @@
 # smart-contracts
 
-A collection of smart contracts meant to be used interoperably to extend ERC20 tokens.
+A collection of smart contracts meant to extend ERC20 and ERC721 tokens.
 
 These contracts have been unlicensed and are freely available for any use, but be aware that they import code from contracts with different (but still permissable) licenses.
 
@@ -10,7 +10,7 @@ These contracts have been unlicensed and are freely available for any use, but b
 An extension of OpenZeppelin's [Ownable](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol) contract which adds the `onlyDelegate` modifier for privileged calls to certain contract functions, while preserving `onlyOwner` for more restricted access: 
 
 ```
-import "https://github.com/whitgroves/solidity-contracts/blob/main/Delegated.sol";
+import {Delegated} from "https://github.com/whitgroves/solidity-contracts/blob/main/Delegated.sol";
 
 contract MyContract is Delegated {
 
@@ -23,11 +23,11 @@ contract MyContract is Delegated {
 ```
 
 ### Leasable
-An extension of OpenZeppelin's [Ownable](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol) contract that allows ownership access for a smart contract to be leased out on a daily basis in exchange for ERC20 tokens at a price set by the contract owner.
+An extension of the `Delegated` contract that allows ownership access for a smart contract to be leased out on a daily basis in exchange for ERC20 tokens at a price set by the contract owner.
 
 Under the hood, internal members of Ownable have been overriden so the existing `onlyOwner` modifier will treat the current tenant as the owner, while making `whileLeased`, `whileNotLeased`, and `onlyOriginalOwner` available for control over which functions should be accessible to borrowers:
 ```
-import "https://github.com/whitgroves/solidity-contracts/blob/main/Leasable.sol";
+import {Leasable} from "https://github.com/whitgroves/solidity-contracts/blob/main/Leasable.sol";
 
 contract MyContract is Leasable {
 
@@ -52,7 +52,7 @@ To use, deploy the contract pointing to the contract address for the ERC20 token
 ### ManagedSupplyERC20
 An extension of OpenZeppelin's [ERC20](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol) contract which implements a manually adjustable tax, automatic burn rate, and delegated minting function restricted by the token's target supply. The contract is abstract, but can be subclassed and deployed rather easily:
 ```
-import "https://github.com/whitgroves/solidity-contracts/blob/main/ManagedSupplyERC20.sol";
+import {ManagedSupplyERC20} from "https://github.com/whitgroves/solidity-contracts/blob/main/ManagedSupplyERC20.sol";
 
 contract TestToken is ManagedSupplyERC20 {
     constructor() ManagedSupplyERC20("Your Own Distributed Ledger", "YODL", <initial owner>, <target supply>) {
@@ -66,3 +66,6 @@ After that, the contract will behave as a standard ERC20 token, except that up t
 Because the 20% limit is shared and enforced by `setTaxRate()` and `burnRate()`, high inflation will prevent raises in the tax rate, and a high tax rate will throttle the burn rate until the supply reaches its target.
 
 In addition, the public `mint()` function wraps ERC20's `_mint()` so the contract owner or their delegates can create additional tokens, but does not allow increases above the target supply; if more tokens are needed, the owner will need to increase the supply target, which will emit the `SupplyTargetChanged` event for any off-chain listeners.
+
+### ERC721
+My implementation of `IERC721`, with `mint()` and `burn()` functions added. Functionally a delegated version of OpenZeppelin's [`ERC721`](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/ERC721.sol) contract, except it doesn't implement `IERC721Metadata`. Created for extensibility of per-item access permissions.

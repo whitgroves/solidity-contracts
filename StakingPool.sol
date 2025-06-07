@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSE
 pragma solidity ^0.8.20;
 
-import "https://github.com/whitgroves/solidity-contracts/blob/main/Delegated.sol";
+import {Delegated} from "https://github.com/whitgroves/solidity-contracts/blob/main/Delegated.sol";
 
 // Imported code license: MIT
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Pausable.sol";
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
+import {Pausable} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Pausable.sol";
+import {IERC20} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
 
 /* 
  * Establishes a pool to stake any ERC20 token and distribute deposits of that token according to stake size.
@@ -27,7 +27,7 @@ abstract contract StakingPool is Delegated, Pausable {
     mapping(address stakeholder => uint tokens) internal _stake;
     mapping(address stakeholder => bool everStaked) internal _everStaked;
 
-    constructor(address _tokenAddress) Delegated(_msgSender()) {
+    constructor(address _tokenAddress, address initialOwner) Delegated(initialOwner) {
         require(IERC20(_tokenAddress).totalSupply() > 0, "Token must have a supply to stake.");
         tokenAddress = _tokenAddress;
     }

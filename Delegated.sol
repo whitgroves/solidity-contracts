@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 // Imported code license: MIT
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol";
+import {Ownable} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol";
 
 /* 
  * An extension of OpenZeppelin's Ownable contract to allow for delegated calls to contract functions.

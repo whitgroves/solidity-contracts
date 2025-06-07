@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSE
 pragma solidity ^0.8.20;
 
-import "https://github.com/whitgroves/solidity-contracts/blob/main/Delegated.sol";
+import {Delegated} from "https://github.com/whitgroves/solidity-contracts/blob/main/Delegated.sol";
 
 // Imported code license: MIT
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Pausable.sol";
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol";
+import {Pausable} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Pausable.sol";
+import {ERC20} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol";
 
 /* 
  * An extension of OpenZeppelin's ERC20 which implements a manually adjustable tax, automatic burn rate,

@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: UNLICENSE
 pragma solidity ^0.8.20;
 
+import {Delegated} from "https://github.com/whitgroves/solidity-contracts/blob/main/Delegated.sol";
+
 // Imported code license: MIT
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol";
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
 
 /* 
- * An extension of OpenZeppelin's Ownable contract that allows ownership access to be leased out on a daily basis
+ * An extension of the Delegated contract that allows ownership access to be leased out on a daily basis
  * in exchange for ERC20 tokens at a price set by the contract owner. The contract supports prices in multiple tokens,
  * although payment must be made in a single currency. 
  * 
  * After the lease ends, ownership reverts automatically, but the lease can be revoked at any time by the owner in
  * exchange for a refund of the remaining time in the original currency.
  */
-abstract contract Leasable is Ownable {
+abstract contract Leasable is Delegated {
 
     uint public maxLeaseDays;
     mapping(address currency => uint amount) public pricePerDay;
@@ -27,7 +28,7 @@ abstract contract Leasable is Ownable {
     event ContractLeased(address tenant, uint leaseEnd);
     event LeaseRevoked(address tenant, address owner);
     
-    constructor(address initialOwner) Ownable(initialOwner) {
+    constructor(address initialOwner) Delegated(initialOwner) {
         _leaseEnd = block.timestamp;
     }
 
