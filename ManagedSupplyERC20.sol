@@ -65,9 +65,9 @@ abstract contract ManagedSupplyERC20 is ERC20, Delegated, Pausable {
             remainder -= tax;
         }
         if (_inflated()) {
-            uint burn = (burnRate() * value) / 100;
-            _burn(account, burn);
-            remainder -= burn;
+            uint burn_ = (burnRate() * value) / 100;
+            _burn(account, burn_);
+            remainder -= burn_;
         }
         return remainder;
     }
@@ -93,5 +93,12 @@ abstract contract ManagedSupplyERC20 is ERC20, Delegated, Pausable {
         uint maxValue = targetSupply - totalSupply();
         if (value > maxValue) revert("Minting requested value would exceed target supply.");
         _mint(account, value);
+    }
+
+    // Public wrapper for ERC20._burn() so senders can burn tokens but not from anyone else's account.
+    function burn(uint256 value) public virtual {
+        address sender = _msgSender();
+        if (balanceOf(sender) < value) revert("Cannot burn more tokens than owned.");
+        _burn(sender, value);
     }
 }
