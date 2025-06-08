@@ -23,7 +23,7 @@ contract MyContract is Delegated {
 ```
 
 ### Leasable
-An extension of the `Delegated` contract that allows ownership access for a smart contract to be leased out on a daily basis in exchange for ERC20 tokens at a price set by the contract owner.
+An extension of the `Delegated` contract that allows ownership access for a smart contract to be leased out on a daily basis in exchange for ERC20 tokens at a price set by the contract owner. Calls to `owner()` will still show the original owner, but `tenant()` is available to confirm the address is currently leasing the contract.
 
 Under the hood, internal members of Ownable have been overriden so the existing `onlyOwner` modifier will treat the current tenant as the owner, while making `whileLeased`, `whileNotLeased`, and `onlyOriginalOwner` available for control over which functions should be accessible to borrowers:
 ```
@@ -71,9 +71,7 @@ In addition, the public `mint()` function wraps ERC20's `_mint()` so the contrac
 My implementation of `IERC721`, with `mint()` and `burn()` functions added. Functionally a delegated version of OpenZeppelin's [`ERC721`](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/ERC721.sol) contract, except it doesn't implement `IERC721Metadata`. Created for extensibility of per-item access permissions.
 
 ### LeasableERC721
-An extension of `ERC721` that implements `Leasable`-like permissions on individual tokens.
-
-Note that in constrast to `Leasable`, approved operators will still have authority to act on each token, except to initiate transfers.
+An extension of `ERC721` that implements `Leasable`-like permissions on individual tokens. Calls to `ownerOf()` will still show the original owner's address, but `tenantOf()` is made available to confirm rentership in the application layer.
 
 To make use of this extension, include a call to `_requireOwnership()` or `_requireApproved()` at the start of your subclass methods, which will restrict specific actions to owners and approved operators, while transferring that authority to the tenant while leased:
 
@@ -96,3 +94,5 @@ contract MyNFT is LeasableERC721 {
 }
 ```
 As shown above, `_requireOriginalOwnership()` is also available for actions which should be more restricted, including revocation of a token's lease.
+
+Also note that in constrast to `Leasable`, approved operators will still have authority to act on each token, except to initiate transfers.
