@@ -8,7 +8,6 @@ These contracts have been unlicensed and are freely available for any use, but b
 
 ### Delegated
 An extension of OpenZeppelin's [Ownable](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol) contract which adds the `onlyDelegate` modifier for privileged calls to certain contract functions, while preserving `onlyOwner` for more restricted access: 
-
 ```
 import {Delegated} from "https://github.com/whitgroves/solidity-contracts/blob/main/Delegated.sol";
 
@@ -41,6 +40,22 @@ contract MyContract is Leasable {
 The contract can be leased out directly or by proxy via `startLease()` and `startLeaseFor()`, although both require a spending allowance by the tenant so the Leasable contract can transfer funds.
 
 Similarly, the original owner and the tenant can revoke or terminate the lease early via `revokeLease()` and `terminateLease()`, which requires an allowance by the owner to reverse the transaction. Note that even if the lease is revoked on the same day, the tenant will always be charged for at least 1 day's use.
+
+### Restricted
+Another extension of `Ownable` that manages access by enforcing a banlist via the `onlyAllowed` modifier. In effect, this allows the contract owner to make every address a delegate by default, and then remove access from untrusted accounts selectively:
+```
+import {Restricted} from "https://github.com/whitgroves/solidity-contracts/blob/main/Restricted.sol";
+
+contract MyContract is Restricted {
+
+    constructor(address initialOwner) Restricted(initialOwner) {}
+
+    function getTransactionHistory(...) public { ... }
+
+    function makeTransaction(...) public Restricted { ... }
+}
+```
+The owner may ban or reinstate any account using `banAccount()` or `reinstateAccount()`, and any user can see which addresses are banned via `isBanned()`.
 
 ## Standalone Contracts
 
