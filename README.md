@@ -7,6 +7,25 @@ These contracts have been unlicensed and are freely available for any use, but b
 ## Contract Extensions
 These are meant to extend existing contracts by adding modifiers and/or access controls.
 
+### InputValidated
+A simple contract that supplies input validations so they can be inherited instead of rewritten. Makes several errors, modifiers, and internal functions available to its subclasses:
+```
+import {InputValidated} from "https://github.com/whitgroves/solidity-contracts/blob/main/InputValidated.sol";
+
+contract MyContract is InputValidated {
+
+    function balanceOf(address user) public nonZeroAddress(user) { 
+        if (msg.sender != user) revert UnauthorizedAccessRequest(msg.sender);
+        ...
+    }
+
+    function transferTo(address to) public nonZeroAddress(to) {
+        address sender = _requireNonZeroAddress(msg.sender);
+        ...
+    }
+}
+```
+
 ### Delegated
 An extension of OpenZeppelin's [Ownable](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol) contract which adds the `onlyDelegate` modifier for privileged calls to certain contract functions, while preserving `onlyOwner` for more restricted access: 
 ```
@@ -58,21 +77,6 @@ contract MyContract is Restricted {
 ```
 The owner may ban or reinstate any account using `banAccount()` or `reinstateAccount()`, and any user can see which addresses are banned via `isBanned()`.
 
-### InputValidated
-A simple contract that supplies input validation for `address` so it can be subclassed instead of rewritten. Makes the `nonZeroAddress` modifier and `_requireNonZeroAddress()` function available to all inherited classes:
-```
-import {InputValidated} from "https://github.com/whitgroves/solidity-contracts/blob/main/InputValidated.sol";
-
-contract MyContract is InputValidated {
-
-    function balanceOf(address user) public nonZeroAddress(user) { ... }
-
-    function transferTo(address to) public nonZeroAddress(to) {
-        address sender = _requireNonZeroAddress(msg.sender);
-        ...
-    }
-}
-```
 
 ## Standalone Contracts
 These contracts are abstract and must be subclassed, but other than that can be deployed as-is.
@@ -82,12 +86,36 @@ A revision of [StakingPool](https://github.com/whitgroves/staking-pool) using in
 
 To use, deploy the contract pointing to the contract address for the ERC20 token you want to setup staking for, then transfer and distribute funds as needed. Secondary contracts can be added as delegates to automate the distribution process entirely on-chain.
 
+### ERC20
+A lightweight implementation of ERC20. Inherits from OpenZeppelin's [Context](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Context.sol) so `_msgSender()` and `_msgData()` can be inherited. 
+
+Internal functions for `_mint()` and `_burn()` are included for extensibility, but these are not routed through `_transfer()` and thus will require separate overrides for any changes in transaction logic.
+
+Otherwise, optional interface features like `name()`, `symbol()`, and `decimals()` may be implemented in the subclass:
+```
+import {ERC20} from "https://github.com/whitgroves/solidity-contracts/blob/main/ERC20.sol";
+
+contract MyToken is ERC20 {
+    
+    constructor() { _mint(_msgSender(), 1000000000); }
+
+    function name() external pure returns(string memory) { return "Test Token"; }
+
+    function symbol() external pure returns(string memory) { return "TEST"; }
+
+    function decimals() external pure returns(uint) { return 18; }
+
+    function burn(uint amount) external { _burn(_msgSender(), amount); }
+
+}
+```
+
 ### ManagedSupplyERC20
 An extension of OpenZeppelin's [ERC20](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol) contract which implements a manually adjustable tax, automatic burn rate, and delegated minting function restricted by the token's target supply. The contract is abstract, but can be subclassed and deployed rather easily:
 ```
 import {ManagedSupplyERC20} from "https://github.com/whitgroves/solidity-contracts/blob/main/ManagedSupplyERC20.sol";
 
-contract TestToken is ManagedSupplyERC20 {
+contract MyToken is ManagedSupplyERC20 {
     constructor() ManagedSupplyERC20("Your Own Distributed Ledger", "YODL", <initial owner>, <target supply>) {
         _mint(<initial holder>, <initial supply>);
     }
