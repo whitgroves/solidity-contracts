@@ -77,6 +77,22 @@ contract MyContract is Restricted {
 ```
 The owner may ban or reinstate any account using `banAccount()` or `reinstateAccount()`, and any user can see which addresses are banned via `isBanned()`.
 
+### AccessControlled
+An extension of `Ownable` that implements both `Delegated` and `Restricted` to avoid inheritance collision. All features work as described above, except that banning an account will also remove their delegate status, and banned accounts cannot be delegated.
+```
+import {AccessControlled} from "https://github.com/whitgroves/solidity-contracts/blob/main/AccessControlled.sol";
+
+contract MyContract is AccessControlled {
+
+    constructor(address initialOwner) AccessControlled(initialOwner) {}
+
+    function burn(...) public onlyAllowed { ... }
+
+    function mint(...) public onlyDelegate { ... }
+
+    function transferOwnership(...) public onlyOwner { ... }
+}
+```
 
 ## Standalone Contracts
 These contracts are abstract and must be subclassed, but other than that can be deployed as-is.
@@ -87,17 +103,13 @@ A revision of [StakingPool](https://github.com/whitgroves/staking-pool) using in
 To use, deploy the contract pointing to the contract address for the ERC20 token you want to setup staking for, then transfer and distribute funds as needed. Secondary contracts can be added as delegates to automate the distribution process entirely on-chain.
 
 ### ERC20
-A lightweight implementation of ERC20. Inherits from OpenZeppelin's [Context](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Context.sol) so `_msgSender()` and `_msgData()` can be inherited. 
-
-Internal functions for `_mint()` and `_burn()` are included for extensibility, but these are not routed through `_transfer()` and thus will require separate overrides for any changes in transaction logic.
-
-Otherwise, optional interface features like `name()`, `symbol()`, and `decimals()` may be implemented in the subclass:
+An `AccessControlled` implementation of ERC20. Internal functions for `_mint()` and `_burn()` are included for extensibility, but optional interface members `name()`, `symbol()`, and `decimals()` must be implemented in the subclass:
 ```
 import {ERC20} from "https://github.com/whitgroves/solidity-contracts/blob/main/ERC20.sol";
 
 contract MyToken is ERC20 {
     
-    constructor() { _mint(_msgSender(), 1000000000); }
+    constructor() ERC20(msg.sender) {}
 
     function name() external pure returns(string memory) { return "Test Token"; }
 
@@ -105,7 +117,13 @@ contract MyToken is ERC20 {
 
     function decimals() external pure returns(uint) { return 18; }
 
+    function mint(address to, uint amount) external onlyDelegate { _mint(to,amount); }
+
     function burn(uint amount) external { _burn(_msgSender(), amount); }
+
+    function _transfer(address _from, address _to, uint256 _value) internal override onlyAllowed {
+        super._transfer(_from, _to, _value);
+    }
 
 }
 ```

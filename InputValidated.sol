@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: UNLICENSE
 pragma solidity ^0.8.20;
 
-/* Provides basic input validation and errors for subclassed contracts. */
+/*
+ * Provides basic input validation and errors for subclassed contracts. 
+ * If inheriting from multiple classes derived from this, all functions and modifiers need to be overriden.
+ * Ideally, only the final derived contract should subclass this to avoid such collisions.
+ */
 abstract contract InputValidated {
 
     error UnauthorizedAccessRequest(address sender);
     error NonZeroAddressRequired();
 
-    modifier nonZeroAddress(address address_) {
+    modifier nonZeroAddress(address address_) virtual {
         _requireNonZeroAddress(address_);
         _;
     }
