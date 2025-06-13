@@ -5,6 +5,7 @@ A collection of smart contracts meant to extend ERC20 and ERC721 tokens.
 These contracts have been unlicensed and are freely available for any use, but be aware that they import code from contracts with different (but still permissable) licenses.
 
 ## Contract Extensions
+These are meant to extend existing contracts by adding modifiers and/or access controls.
 
 ### Delegated
 An extension of OpenZeppelin's [Ownable](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol) contract which adds the `onlyDelegate` modifier for privileged calls to certain contract functions, while preserving `onlyOwner` for more restricted access: 
@@ -57,7 +58,24 @@ contract MyContract is Restricted {
 ```
 The owner may ban or reinstate any account using `banAccount()` or `reinstateAccount()`, and any user can see which addresses are banned via `isBanned()`.
 
+### InputValidated
+A simple contract that supplies input validation for `address` so it can be subclassed instead of rewritten. Makes the `nonZeroAddress` modifier and `_requireNonZeroAddress()` function available to all inherited classes:
+```
+import {InputValidated} from "https://github.com/whitgroves/solidity-contracts/blob/main/InputValidated.sol";
+
+contract MyContract is InputValidated {
+
+    function balanceOf(address user) public nonZeroAddress(user) { ... }
+
+    function transferTo(address to) public nonZeroAddress(to) {
+        address sender = _requireNonZeroAddress(msg.sender);
+        ...
+    }
+}
+```
+
 ## Standalone Contracts
+These contracts are abstract and must be subclassed, but other than that can be deployed as-is.
 
 ### StakingPool
 A revision of [StakingPool](https://github.com/whitgroves/staking-pool) using inherited access and emergency stop controls. Note that in this version, the only way to destake a pool is to retire it.
