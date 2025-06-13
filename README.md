@@ -111,9 +111,9 @@ contract MyToken is ERC20 {
     
     constructor() ERC20(msg.sender) {}
 
-    function name() external pure returns(string memory) { return "Test Token"; }
+    function name() external pure returns(string memory) { return "Your Own Distributed Ledger"; }
 
-    function symbol() external pure returns(string memory) { return "TEST"; }
+    function symbol() external pure returns(string memory) { return "YODL"; }
 
     function decimals() external pure returns(uint) { return 18; }
 
@@ -129,14 +129,23 @@ contract MyToken is ERC20 {
 ```
 
 ### ManagedSupplyERC20
-An extension of OpenZeppelin's [ERC20](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol) contract which implements a manually adjustable tax, automatic burn rate, and delegated minting function restricted by the token's target supply. The contract is abstract, but can be subclassed and deployed rather easily:
+An extension of the `ERC20` contract above which implements a manually adjustable tax, automatic burn rate, and delegated minting function restricted by the token's target supply.
+
+The contract can be deployed similar to the above, except a target supply must be set on construction:
 ```
 import {ManagedSupplyERC20} from "https://github.com/whitgroves/solidity-contracts/blob/main/ManagedSupplyERC20.sol";
 
-contract MyToken is ManagedSupplyERC20 {
-    constructor() ManagedSupplyERC20("Your Own Distributed Ledger", "YODL", <initial owner>, <target supply>) {
-        _mint(<initial holder>, <initial supply>);
+contract TestToken is ManagedSupplyERC20 {
+    
+    constructor() ManagedSupplyERC20(msg.sender, 10000) {
+        _mint(msg.sender, 10000);
     }
+
+    function name() external pure returns(string memory) { return "Your Own Distributed Ledger"; }
+
+    function symbol() external pure returns(string memory) { return "YODL"; }
+
+    function decimals() external pure returns(uint) { return 0; }
 }
 ```
 
