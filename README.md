@@ -108,7 +108,7 @@ contract TestPool is StakingPool {
     constructor(address tokenAddress_) StakingPool(tokenAddress_, _msgSender()) {}
 }
 ```
-Tthen transfer and distribute funds as needed. Secondary contracts can be added as delegates to automate the distribution process entirely on-chain.
+Then transfer and distribute funds as needed. Secondary contracts can be added as delegates to automate the distribution process entirely on-chain.
 
 ### ERC20
 An `AccessControlled` implementation of ERC20. Internal functions for `_mint()` and `_burn()` are included for extensibility, but optional interface members `name()`, `symbol()`, and `decimals()` must be implemented in the subclass:
