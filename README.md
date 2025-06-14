@@ -98,9 +98,17 @@ contract MyContract is AccessControlled {
 These contracts are abstract and must be subclassed, but other than that can be deployed as-is.
 
 ### StakingPool
-A revision of [StakingPool](https://github.com/whitgroves/staking-pool) using inherited access and emergency stop controls. Note that in this version, the only way to destake a pool is to retire it.
+An `AccessControlled` revision of [StakingPool](https://github.com/whitgroves/staking-pool) using OpenZeppelin's [Pausable](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Pausable.sol) for emergency stop controls. Note that in this version, the only way to destake a pool is to retire it.
 
-To use, deploy the contract pointing to the contract address for the ERC20 token you want to setup staking for, then transfer and distribute funds as needed. Secondary contracts can be added as delegates to automate the distribution process entirely on-chain.
+To use, deploy the contract as such:
+```
+import {StakingPool} from "https://github.com/whitgroves/solidity-contracts/blob/main/StakingPool.sol";
+
+contract TestPool is StakingPool {
+    constructor(address tokenAddress_) StakingPool(tokenAddress_, _msgSender()) {}
+}
+```
+Tthen transfer and distribute funds as needed. Secondary contracts can be added as delegates to automate the distribution process entirely on-chain.
 
 ### ERC20
 An `AccessControlled` implementation of ERC20. Internal functions for `_mint()` and `_burn()` are included for extensibility, but optional interface members `name()`, `symbol()`, and `decimals()` must be implemented in the subclass:
@@ -149,7 +157,7 @@ contract TestToken is ManagedSupplyERC20 {
 }
 ```
 
-After that, the contract will behave as a standard ERC20 token, except that up to 20% of each transaction may be diverted to an address set by `setTaxAddress()` or burned to maintain the supply target set by `setTargetSupply()`.
+After that, the contract will behave as a standard ERC20 token, except that up to 20% of each transaction may be diverted to an address (such as a `StakingPool`) set by `setTaxAddress()` or burned to maintain the supply target set by `setTargetSupply()`.
 
 Because the 20% limit is shared and enforced by `setTaxRate()` and `burnRate()`, high inflation will prevent raises in the tax rate, and a high tax rate will throttle the burn rate until the supply reaches its target.
 
