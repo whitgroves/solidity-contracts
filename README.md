@@ -145,9 +145,7 @@ import {ManagedSupplyERC20} from "https://github.com/whitgroves/solidity-contrac
 
 contract TestToken is ManagedSupplyERC20 {
     
-    constructor() ManagedSupplyERC20(msg.sender, 10000) {
-        _mint(msg.sender, 10000);
-    }
+    constructor() ManagedSupplyERC20(msg.sender, 10000) {} // `mint()` is made public so tokens can be minted later
 
     function name() external pure returns(string memory) { return "Your Own Distributed Ledger"; }
 
@@ -164,6 +162,34 @@ Because the 20% limit is shared and enforced by `setTaxRate()` and `burnRate()`,
 In addition, a public `mint()` function wraps ERC20's `_mint()` so the contract owner or their delegates can create additional tokens, but does not allow increases above the target supply; if more tokens are needed, the owner will need to increase the supply target, which will emit the `SupplyTargetChanged` event for any off-chain listeners.
 
 Similarly, a public `burn()` function is available so tokens may be burned manually, but only by the account that holds them.
+
+### TradeableERC20
+Another extension of `ERC20` that allows trades of that token in exchange for any other ERC20 token. Deployment is similar to `ManagedSupplyERC20`:
+```
+import {TradeableERC20} from "https://github.com/whitgroves/solidity-contracts/blob/main/TradeableERC20.sol";
+
+contract TestToken is TradeableERC20 {
+    
+    constructor() TradeableERC20(msg.sender) {
+        _mint(msg.sender, 10000);
+    }
+
+    function name() external pure returns(string memory) { return "Your Own Distributed Ledger"; }
+
+    function symbol() external pure returns(string memory) { return "YODL"; }
+
+    function decimals() external pure returns(uint) { return 0; }
+}
+```
+Each account can then set their own trade rates using `makeBuyOffer()` to buy a specified currency in exhange for this token, `makeSellOffer()` to sell this token in exhange for a specific currency, or `makeTradeOffer()` to set the price for open trades. 
+
+Note that setting the exchange rate to 0 for a token rejects all trades in that currency, and all trade rates are 0 by default.
+
+A trader looking to enter the token can see buy and sell prices via `getSellOffer()` and `getBuyOffer()`, then (assuming the trade offers are above 0) make the appropriate trade via `buy()` or `sell()`. 
+
+Transfers are routed through this contract, which requires an allowance on the token being exchanged, but will bypass that allowance for this contract's own token; as a consequence, all trades will incur 2 transfers of the buyer's token (buyer->contract->seller) so be aware that any transaction fees on those tokens will be doubled.
+
+Once a trade is complete, the contract will emit the `ERC20TokensTraded` event with the currencies and amounts exchanged for any off-chain listeners.
 
 ### ERC721
 My implementation of `IERC721`, with `mint()` and `burn()` functions added. Functionally a delegated version of OpenZeppelin's [`ERC721`](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/ERC721.sol) contract, except it doesn't implement `IERC721Metadata`. Created for extensibility of per-item access permissions.
