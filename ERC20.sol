@@ -57,7 +57,7 @@ abstract contract ERC20 is IERC20, AccessControlled, Pausable {
         return _allowances[_owner][_spender];
     }
 
-    function _transfer(address _from, address _to, uint256 _value) internal virtual whenNotPaused {
+    function _transfer(address _from, address _to, uint256 _value) internal virtual whenNotPaused onlyAllowed {
         if ((_balances[_from] < _value) && (_from != address(0))) revert ERC20InsufficientFunds(_from);
         unchecked { // initial mint underflows the balance for the zero address, but we choose to ignore it
             _balances[_from] -= _value;

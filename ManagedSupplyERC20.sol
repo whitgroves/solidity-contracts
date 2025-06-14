@@ -1,38 +1,22 @@
 // SPDX-License-Identifier: UNLICENSE
 pragma solidity ^0.8.20;
 
-import {ERC20} from "./ERC20.sol";
+import {TaxableERC20} from "./TaxableERC20.sol";
 
 /* 
- * An extension of ERC20 which implements a manually adjustable tax, automatic burn rate, and restricted minting 
+ * An extension of TradeableERC20 which implements an automatic burn rate and restricted minting 
  * determined by the token's current supply.
  */
-abstract contract ManagedSupplyERC20 is ERC20 {
+abstract contract ManagedSupplyERC20 is TaxableERC20 {
     
-    uint8 constant TRANSACTION_CAP = 20;
-
     uint256 private _targetSupply;
-    address private _taxAddress;
-    uint8 private _taxRate;
 
     event SupplyTargetChanged(uint256 previousTarget, uint256 newTarget, uint256 currentSupply);
-    event TaxAddressChanged(address previousAddress, address newAddress);
-    event TaxRateChanged(uint8 previousRate, uint8 newRate);
 
-    constructor(address initialOwner, uint256 targetSupply_) ERC20(initialOwner) {
+    constructor(address initialOwner, uint256 targetSupply_, uint8 maxTaxRate_) 
+        TaxableERC20(initialOwner, maxTaxRate_)
+    {
         setTargetSupply(targetSupply_);
-    }
-
-    function setTaxAddress(address taxAddress_) external virtual onlyOwner {
-        if (taxAddress_ == address(0)) revert("Tax address cannot be zero address.");
-        emit TaxAddressChanged(_taxAddress, taxAddress_);
-        _taxAddress = taxAddress_;        
-    }
-
-    function setTaxRate(uint8 taxRate_) external virtual onlyDelegate {
-        if (taxRate_ > (TRANSACTION_CAP - burnRate())) revert("Tax + burn rates cannot exceed 20%.");
-        emit TaxRateChanged(_taxRate, taxRate_);
-        _taxRate = taxRate_;
     }
 
     function setTargetSupply(uint256 targetSupply_) public virtual onlyOwner {
@@ -45,17 +29,10 @@ abstract contract ManagedSupplyERC20 is ERC20 {
         return _targetSupply;
     }
 
-    function taxAddress() public virtual view returns (address) {
-        return _taxAddress;
-    }
-
-    function taxRate() public virtual view returns (uint8) {
-        return _taxRate;
-    }
-
     function burnRate() public virtual view returns (uint) {
         uint targetRate = totalSupply() / targetSupply();
-        if (targetRate > 0 && targetRate > (TRANSACTION_CAP - taxRate())) targetRate = (TRANSACTION_CAP - taxRate());
+        uint maxBurnRate = maxTaxRate() - taxRate();
+        if (targetRate > 0 && targetRate > maxBurnRate) return maxBurnRate;
         return targetRate;
     }
 
@@ -72,19 +49,9 @@ abstract contract ManagedSupplyERC20 is ERC20 {
         _burn(_msgSender(), value);
     }
 
-    // Override for ERC20._transfer() to allow pausing of transactions as a whole or for banned accounts.
-    function _transfer(address _from, address _to, uint256 _value) internal virtual override onlyAllowed {
-        super._transfer(_from, _to, _adjust(_from, _value));
-    }
-
     // Takes a payment value, deducts and transfers a % of it as tax and/or burn, and then returns the remainder.
-    function _adjust(address account, uint256 value) internal virtual returns (uint256) {
-        uint remainder = value;
-        if (taxRate() > 0 && taxAddress() != address(0)) {
-            uint tax = (taxRate() * value) / 100;
-            _transfer(account, payable(taxAddress()), tax);
-            remainder -= tax;
-        }
+    function _adjust(address account, uint256 value) internal override returns (uint256) {
+        uint remainder = super._adjust(account, value);
         if (_isInflated()) {
             uint burn_ = (burnRate() * value) / 100;
             _burn(account, burn_);

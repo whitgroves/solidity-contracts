@@ -136,8 +136,31 @@ contract MyToken is ERC20 {
 }
 ```
 
+### TaxableERC20
+An extension of `ERC20` that implements an adjustable transaction tax and an optional tax cap. On construction, a maximum tax rate of 0-99% must be set that will be enforced on all tax cap changes for the lifetime of the contract; if a value larger than 99 is passed to the constructor, it will be clamped to 99%:
+```
+import {TaxableERC20} from "https://github.com/whitgroves/solidity-contracts/blob/main/TaxableERC20.sol";
+
+contract TestToken is TaxableERC20 {
+    
+    constructor() TaxableERC20(msg.sender, 100) { // even though 100 is passed, max rate will be 99%
+        _mint(msg.sender, 1000);
+        setTaxAddress(msg.sender);
+        setTaxRate(15); // 15%
+    }
+
+    function name() external pure returns(string memory) { return "Your Own Distributed Ledger"; }
+
+    function symbol() external pure returns(string memory) { return "YODL"; }
+
+    function decimals() external pure returns(uint) { return 0; }
+
+}
+```
+Both `setTaxRate()` and `setTaxAddress()` will accept 0 or `address(0)` as inputs, which disables tax collection. Otherwise, the contract will collect the tax on each transaction and transfer it to another address (such as a `StakingPool`).
+
 ### ManagedSupplyERC20
-An extension of the `ERC20` contract above which implements a manually adjustable tax, automatic burn rate, and delegated minting function restricted by the token's target supply.
+An extension `TaxableERC20` contract above which implements an automatic burn rate and delegated minting function based on the token's target supply.
 
 The contract can be deployed similar to the above, except a target supply must be set on construction:
 ```
@@ -145,7 +168,7 @@ import {ManagedSupplyERC20} from "https://github.com/whitgroves/solidity-contrac
 
 contract TestToken is ManagedSupplyERC20 {
     
-    constructor() ManagedSupplyERC20(msg.sender, 10000) {} // `mint()` is made public so tokens can be minted later
+    constructor() ManagedSupplyERC20(msg.sender, 10000, 100) {} // `mint()` is made public so tokens can be minted later
 
     function name() external pure returns(string memory) { return "Your Own Distributed Ledger"; }
 
@@ -154,10 +177,9 @@ contract TestToken is ManagedSupplyERC20 {
     function decimals() external pure returns(uint) { return 0; }
 }
 ```
+Similar to `TaxableERC20`, the contract will collect a % of each transaction to be taxed and/or burned to maintain the supply target set by `setTargetSupply()`.
 
-After that, the contract will behave as a standard ERC20 token, except that up to 20% of each transaction may be diverted to an address (such as a `StakingPool`) set by `setTaxAddress()` or burned to maintain the supply target set by `setTargetSupply()`.
-
-Because the 20% limit is shared and enforced by `setTaxRate()` and `burnRate()`, high inflation will prevent raises in the tax rate, and a high tax rate will throttle the burn rate until the supply reaches its target.
+Because the tax limit is shared and enforced by `setTaxRate()` and `burnRate()`, high inflation will prevent raises in the tax rate, and a high tax rate will throttle the burn rate until the supply reaches its target.
 
 In addition, a public `mint()` function wraps ERC20's `_mint()` so the contract owner or their delegates can create additional tokens, but does not allow increases above the target supply; if more tokens are needed, the owner will need to increase the supply target, which will emit the `SupplyTargetChanged` event for any off-chain listeners.
 
