@@ -5,8 +5,9 @@ import {AccessControlled} from "./AccessControlled.sol";
 
 // Imported code license: MIT
 import {IERC20} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
+import {Pausable} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Pausable.sol";
 
-abstract contract ERC20 is IERC20, AccessControlled {
+abstract contract ERC20 is IERC20, AccessControlled, Pausable {
 
     uint private _totalSupply;
     mapping(address => uint) private _balances;
@@ -16,6 +17,14 @@ abstract contract ERC20 is IERC20, AccessControlled {
     error ERC20InsufficientAllowance(address account, address spender);
 
     constructor(address initialOwner) AccessControlled(initialOwner) {}
+
+    function pause() external virtual onlyDelegate {
+        _pause();
+    }
+
+    function unpause() external virtual onlyOwner {
+        _unpause();
+    }
 
     function totalSupply() public virtual view returns (uint256) {
         return _totalSupply;
@@ -48,7 +57,7 @@ abstract contract ERC20 is IERC20, AccessControlled {
         return _allowances[_owner][_spender];
     }
 
-    function _transfer(address _from, address _to, uint256 _value) internal virtual {
+    function _transfer(address _from, address _to, uint256 _value) internal virtual whenNotPaused {
         if ((_balances[_from] < _value) && (_from != address(0))) revert ERC20InsufficientFunds(_from);
         unchecked { // initial mint underflows the balance for the zero address, but we choose to ignore it
             _balances[_from] -= _value;

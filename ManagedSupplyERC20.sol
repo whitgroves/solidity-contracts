@@ -3,14 +3,11 @@ pragma solidity ^0.8.20;
 
 import {ERC20} from "./ERC20.sol";
 
-// Imported code license: MIT
-import {Pausable} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Pausable.sol";
-
 /* 
- * An extension of ERC20 which implements a manually adjustable tax, automatic burn rate, pausable transactions, and a
- * restricted minting function determined by the token's current supply.
+ * An extension of ERC20 which implements a manually adjustable tax, automatic burn rate, and restricted minting 
+ * determined by the token's current supply.
  */
-abstract contract ManagedSupplyERC20 is ERC20, Pausable {
+abstract contract ManagedSupplyERC20 is ERC20 {
     
     uint8 constant TRANSACTION_CAP = 20;
 
@@ -70,18 +67,18 @@ abstract contract ManagedSupplyERC20 is ERC20, Pausable {
         _mint(account, value);
     }
 
-    // Wrapper for ERC20._burn() so tokens can be burned from their owners (and only their owners) account.
+    // Wrapper for ERC20._burn() so tokens can be burned from their owners' (and only their owners') account.
     function burn(uint256 value) public virtual {
         _burn(_msgSender(), value);
     }
 
     // Override for ERC20._transfer() to allow pausing of transactions as a whole or for banned accounts.
-    function _transfer(address _from, address _to, uint256 _value) internal virtual override whenNotPaused onlyAllowed {
+    function _transfer(address _from, address _to, uint256 _value) internal virtual override onlyAllowed {
         super._transfer(_from, _to, _adjust(_from, _value));
     }
 
     // Takes a payment value, deducts and transfers a % of it as tax and/or burn, and then returns the remainder.
-    function _adjust(address account, uint256 value) internal virtual whenNotPaused returns (uint256) {
+    function _adjust(address account, uint256 value) internal virtual returns (uint256) {
         uint remainder = value;
         if (taxRate() > 0 && taxAddress() != address(0)) {
             uint tax = (taxRate() * value) / 100;

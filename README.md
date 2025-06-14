@@ -111,7 +111,7 @@ contract TestPool is StakingPool {
 Then transfer and distribute funds as needed. Secondary contracts can be added as delegates to automate the distribution process entirely on-chain.
 
 ### ERC20
-An `AccessControlled` implementation of ERC20. Internal functions for `_mint()` and `_burn()` are included for extensibility, but optional interface members `name()`, `symbol()`, and `decimals()` must be implemented in the subclass:
+An `AccessControlled` implementation of ERC20 with [Pausable](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Pausable.sol) controls. Internal functions for `_mint()` and `_burn()` are included for extensibility, but optional interface members `name()`, `symbol()`, and `decimals()` must be implemented in the subclass:
 ```
 import {ERC20} from "https://github.com/whitgroves/solidity-contracts/blob/main/ERC20.sol";
 
