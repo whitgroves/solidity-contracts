@@ -41,26 +41,6 @@ contract MyContract is Delegated {
 }
 ```
 
-### Leasable
-An extension of the `Delegated` contract that allows ownership access for a smart contract to be leased out on a daily basis in exchange for ERC20 tokens at a price set by the contract owner. Calls to `owner()` will still show the original owner, but `tenant()` is available to confirm the address is currently leasing the contract.
-
-Under the hood, internal members of Ownable have been overriden so the existing `onlyOwner` modifier will treat the current tenant as the owner, while making `whileLeased`, `whileNotLeased`, and `onlyOriginalOwner` available for control over which functions should be accessible to borrowers:
-```
-import {Leasable} from "https://github.com/whitgroves/solidity-contracts/blob/main/Leasable.sol";
-
-contract MyContract is Leasable {
-
-    constructor(address initialOwner) Leasable(initialOwner) {}
-
-    function updateConnections(...) public whileLeased onlyOwner { ... }
-
-    function transferOwnership(...) public notWhileLeased onlyOriginalOwner { ... }
-}
-```
-The contract can be leased out directly or by proxy via `startLease()` and `startLeaseFor()`, although both require a spending allowance by the tenant so the Leasable contract can transfer funds.
-
-Similarly, the original owner and the tenant can revoke or terminate the lease early via `revokeLease()` and `terminateLease()`, which requires an allowance by the owner to reverse the transaction. Note that even if the lease is revoked on the same day, the tenant will always be charged for at least 1 day's use.
-
 ### Restricted
 Another extension of `Ownable` that manages access by enforcing a banlist via the `onlyAllowed` modifier. In effect, this allows the contract owner to make every address a delegate by default, and then remove access from untrusted accounts selectively:
 ```
@@ -93,6 +73,26 @@ contract MyContract is AccessControlled {
     function transferOwnership(...) public onlyOwner { ... }
 }
 ```
+
+### Leasable
+An extension of `AccessControlled` that allows ownership for a smart contract to be leased out on a daily basis in exchange for ERC20 tokens at a price set by the contract owner. Calls to `owner()` will still show the original owner, but `tenant()` is available to confirm the address currently leasing the contract.
+
+Under the hood, internal members of Ownable have been overriden so the existing `onlyOwner` modifier will treat the current tenant as the owner, while making `whileLeased`, `whileNotLeased`, and `onlyOriginalOwner` available for control over which functions should be accessible to borrowers:
+```
+import {Leasable} from "https://github.com/whitgroves/solidity-contracts/blob/main/Leasable.sol";
+
+contract MyContract is Leasable {
+
+    constructor(address initialOwner) Leasable(initialOwner) {}
+
+    function updateConnections(...) public whileLeased onlyOwner { ... }
+
+    function transferOwnership(...) public notWhileLeased onlyOriginalOwner { ... }
+}
+```
+The contract can be leased out directly or by proxy via `startLease()` and `startLeaseFor()`, although both require a spending allowance by the tenant so the Leasable contract can transfer funds.
+
+Similarly, the original owner and the tenant can revoke or terminate the lease early via `revokeLease()` and `terminateLease()`, which requires an allowance by the owner to reverse the transaction. Note that even if the lease is revoked on the same day, the tenant will always be charged for at least 1 day's use.
 
 ## Standalone Contracts
 These contracts are abstract and must be subclassed, but other than that can be deployed as-is.
