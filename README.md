@@ -159,6 +159,11 @@ contract TestToken is TaxableERC20 {
 ```
 Both `setTaxRate()` and `setTaxAddress()` will accept 0 or `address(0)` as inputs, which disables tax collection. Otherwise, the contract will collect the tax on each transaction and transfer it to another address (such as a `StakingPool`).
 
+### ProgressivelyTaxableERC20
+An extension of `TaxableERC20` that implements tax brackets instead of a flat rate. `setTaxRate()` has been overriden to apply a clamp on taxes for all brackets at once, and overloaded to allow creation of new brackets or updates to existing ones.
+
+When any of these are changed, they will emit the `TaxBracketChanged` event.
+
 ### ManagedSupplyERC20
 An extension `TaxableERC20` contract above which implements an automatic burn rate and delegated minting function based on the token's target supply.
 
