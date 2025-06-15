@@ -26,8 +26,7 @@ abstract contract TaxableERC20 is ERC20 {
     }
 
     function setTaxRate(uint8 taxRate_) public virtual onlyDelegate {
-        uint8 taxCap_ = taxCap();
-        if (taxCap_ > 0 && taxRate_ > taxCap_) revert("Tax rate cannot exceed tax cap.");
+        if (taxRate_ > taxCap()) revert("Tax rate cannot exceed tax cap.");
         emit TaxRateChanged(_taxRate, taxRate_);
         _taxRate = taxRate_;
     }
