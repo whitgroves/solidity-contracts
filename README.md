@@ -142,7 +142,7 @@ An extension of `ERC20` that implements an adjustable transaction tax and an opt
 ```
 import {TaxableERC20} from "https://github.com/whitgroves/solidity-contracts/blob/main/TaxableERC20.sol";
 
-contract TestToken is TaxableERC20 {
+contract MyToken is TaxableERC20 {
     
     constructor() TaxableERC20(msg.sender, 100) { // even though 100 is passed, max rate will be 99%
         _mint(msg.sender, 1000);
@@ -150,9 +150,9 @@ contract TestToken is TaxableERC20 {
         setTaxRate(15); // 15%
     }
 
-    function name() external pure returns(string memory) { return "Your Own Distributed Ledger"; }
+    function name() external pure returns(string memory) { return "Transfer Tax Token"; }
 
-    function symbol() external pure returns(string memory) { return "YODL"; }
+    function symbol() external pure returns(string memory) { return "T3"; }
 
     function decimals() external pure returns(uint) { return 18; }
 
@@ -171,6 +171,30 @@ An extension of `TaxableERC20` that implements tax brackets instead of a flat ra
 
 When any of these are changed, they will emit the `TaxBracketChanged` event.
 
+Deployment is similar to `TaxableERC20`:
+```
+import {ProgressivelyTaxableERC20} from "https://github.com/whitgroves/solidity-contracts/blob/main/ProgressivelyTaxableERC20.sol";
+
+contract MyToken is ProgressivelyTaxableERC20 {
+    
+    constructor() ProgressivelyTaxableERC20(msg.sender, 100) { // even though 100 is passed, max rate will be 99%
+        _mint(msg.sender, 100000);
+        setTaxAddress(msg.sender);
+        setTaxRate(10, 1); // brackets are ordered here, but will self-sort on addition
+        setTaxRate(100, 2);
+        setTaxRate(1000, 3);
+        setTaxRate(10000, 5);
+    }
+
+    function name() external pure returns(string memory) { return "1040 Token"; }
+
+    function symbol() external pure returns(string memory) { return "IRS"; }
+
+    function decimals() external pure returns(uint) { return 18; }
+
+}
+```
+
 ### ManagedSupplyERC20
 An extension `TaxableERC20` contract above which implements an automatic burn rate and delegated minting function based on the token's target supply.
 
@@ -178,15 +202,15 @@ The contract can be deployed similar to the above, except a target supply must b
 ```
 import {ManagedSupplyERC20} from "https://github.com/whitgroves/solidity-contracts/blob/main/ManagedSupplyERC20.sol";
 
-contract TestToken is ManagedSupplyERC20 {
+contract MyToken is ManagedSupplyERC20 {
     
     constructor() ManagedSupplyERC20(msg.sender, 10000, 100) {} // `mint()` is made public so tokens can be minted later
 
-    function name() external pure returns(string memory) { return "Your Own Distributed Ledger"; }
+    function name() external pure returns(string memory) { return "Central Reserve Token"; }
 
-    function symbol() external pure returns(string memory) { return "YODL"; }
+    function symbol() external pure returns(string memory) { return "VOLKER"; }
 
-    function decimals() external pure returns(uint) { return 0; }
+    function decimals() external pure returns(uint) { return 18; }
 }
 ```
 Similar to `TaxableERC20`, the contract will collect a % of each transaction to be taxed and/or burned to maintain the supply target set by `setTargetSupply()`. Note that transactions involving tax-exempt addresses are also exempt from automatic burns.
@@ -202,17 +226,17 @@ Another extension of `ERC20` that allows trades of that token in exchange for an
 ```
 import {TradeableERC20} from "https://github.com/whitgroves/solidity-contracts/blob/main/TradeableERC20.sol";
 
-contract TestToken is TradeableERC20 {
+contract MyToken is TradeableERC20 {
     
     constructor() TradeableERC20(msg.sender) {
         _mint(msg.sender, 10000);
     }
 
-    function name() external pure returns(string memory) { return "Your Own Distributed Ledger"; }
+    function name() external pure returns(string memory) { return "Anycoin"; }
 
-    function symbol() external pure returns(string memory) { return "YODL"; }
+    function symbol() external pure returns(string memory) { return "BABEL"; }
 
-    function decimals() external pure returns(uint) { return 0; }
+    function decimals() external pure returns(uint) { return 18; }
 }
 ```
 Each account can then set their own trade rates using `makeBuyOffer()` to buy a specified currency in exhange for this token, `makeSellOffer()` to sell this token in exhange for a specific currency, or `makeTradeOffer()` to set the price for open trades. 
