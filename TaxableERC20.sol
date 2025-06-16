@@ -10,18 +10,24 @@ abstract contract TaxableERC20 is ERC20 {
     address private _taxAddress;
     uint8 private _taxRate;
     uint8 private _taxCap;
+    mapping(address => bool) _isTaxExempt;
 
     event TaxAddressChanged(address previousAddress, address newAddress);
     event TaxRateChanged(uint8 previousRate, uint8 newRate);
+    event TaxExemptionGranted(address account);
+    event TaxExemptionRemoved(address account);
 
     constructor(address initialOwner, uint8 maxTaxRate_) ERC20(initialOwner) {
         MAX_TAX_RATE = maxTaxRate_ > 99 ? 99 : maxTaxRate_; // strongly enforced since >= 100% tax is pointless
         setTaxCap(MAX_TAX_RATE);
+        setTaxExempt(address(0), true); // no tax on mints
     }
 
     // public to allow calls on subclass construction
     function setTaxAddress(address taxAddress_) public virtual onlyOwner {
         emit TaxAddressChanged(_taxAddress, taxAddress_);
+        setTaxExempt(_taxAddress, false);
+        setTaxExempt(taxAddress_, true);
         _taxAddress = taxAddress_;        
     }
 
@@ -35,6 +41,13 @@ abstract contract TaxableERC20 is ERC20 {
         if (taxCap_ > MAX_TAX_RATE) revert("Tax cap cannot exceed max tax rate.");
         _taxCap = taxCap_;
         if (_taxCap < taxRate()) setTaxRate(taxCap_);
+    }
+
+    function setTaxExempt(address account, bool isExempt) public virtual onlyDelegate {
+        if (_msgSender() == account && account != owner()) revert("Delegates cannot make themselves tax exempt.");
+        _isTaxExempt[account] = isExempt;
+        if (isExempt) emit TaxExemptionGranted(account);
+        else emit TaxExemptionRemoved(account);
     }
 
     function taxAddress() public virtual view returns (address) {
@@ -53,27 +66,34 @@ abstract contract TaxableERC20 is ERC20 {
         return MAX_TAX_RATE;
     }
 
-    // Override of ERC20.transfer() to collect the transaction tax, since overriding _transfer() recurses.
-    function transfer(address _to, uint256 _value) public virtual override nonZeroAddress(_to) returns (bool success) {
-        _transfer(_msgSender(), _to, _adjust(_msgSender(), _value));
-        return true;
+    function isTaxExempt(address account) public view returns (bool) {
+        return _isTaxExempt[account];
     }
 
-    // Override of ERC20.transferFrom() to collect the transaction tax, since overriding _transfer() recurses.
+    // Override of ERC20.transfer() to collect the transaction tax. Done here instead of _transfer() to avoid recursion.
+    function transfer(address _to, uint256 _value) public virtual override nonZeroAddress(_to) returns (bool success) {
+        return _processTransfer(_msgSender(), _to, _value);
+    }
+
+    // Override of ERC20.transferFrom() to collect the transaction tax. Done here instead of _transfer() to avoid recursion.
     function transferFrom(address _from, address _to, uint256 _value) public virtual override nonZeroAddress(_to) 
         returns (bool success) 
     {
         if (_from != _msgSender() && (allowance(_from, _msgSender()) < _value)) 
             revert ERC20InsufficientAllowance(_from, _msgSender());
         _allowances[_from][_msgSender()] -= _value;
-        _transfer(_from, _to, _adjust(_from, _value));
-        return true;
+        return _processTransfer(_from, _to, _value);
+    }
+
+    // Determines if the spender or sender are tax exempt, then collects tax if applicable.
+    // Separate from _transfer() since overriding _transfer() recurses in derived classes.
+    function _processTransfer(address _from, address _to, uint256 _value) internal virtual returns (bool success) {
+        if (taxRate() == 0 || isTaxExempt(_from) || isTaxExempt(_to)) return _transfer(_from, _to, _value);
+        return _transfer(_from, _to, _collectTax(_from, _value));
     }
 
     // Takes a payment value, deducts and transfers a % of it as tax, and then returns the remainder to be transferred.
-    // If overriding _transfer(), do not call to this function, as it will recurse.
-    function _adjust(address account, uint256 value) internal virtual returns (uint256) {
-        if (taxRate() == 0 || taxAddress() == address(0)) return value;
+    function _collectTax(address account, uint256 value) internal virtual returns (uint256) {
         uint tax = (taxRate() * value) / 100;
         _transfer(account, payable(taxAddress()), tax);
         uint remainder = value - tax;

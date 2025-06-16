@@ -35,16 +35,14 @@ abstract contract ERC20 is IERC20, AccessControlled, Pausable {
     }
 
     function transfer(address _to, uint256 _value) public virtual nonZeroAddress(_to) returns (bool success) {
-        _transfer(_msgSender(), _to, _value);
-        return true;
+        return _transfer(_msgSender(), _to, _value);
     }
 
     function transferFrom(address _from, address _to, uint256 _value) public virtual nonZeroAddress(_to) returns (bool success) {
         if (_from != _msgSender() && (allowance(_from, _msgSender()) < _value)) 
             revert ERC20InsufficientAllowance(_from, _msgSender());
         _allowances[_from][_msgSender()] -= _value;
-        _transfer(_from, _to, _value);
-        return true;
+        return _transfer(_from, _to, _value);
     }
 
     function approve(address _spender, uint256 _value) public virtual nonZeroAddress(_spender) returns (bool success) {
@@ -57,13 +55,16 @@ abstract contract ERC20 is IERC20, AccessControlled, Pausable {
         return _allowances[_owner][_spender];
     }
 
-    function _transfer(address _from, address _to, uint256 _value) internal virtual whenNotPaused onlyAllowed {
+    function _transfer(address _from, address _to, uint256 _value) internal virtual whenNotPaused onlyAllowed 
+        returns (bool success) 
+    {
         if ((_balances[_from] < _value) && (_from != address(0))) revert ERC20InsufficientFunds(_from);
         unchecked { // initial mint underflows the balance for the zero address, but we choose to ignore it
             _balances[_from] -= _value;
             _balances[_to] += _value;
         }
         emit Transfer(_from, _to, _value);
+        return true;
     }
 
     function _mint(address _to, uint256 _value) internal virtual nonZeroAddress(_to) {

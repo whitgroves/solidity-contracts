@@ -50,8 +50,8 @@ abstract contract ManagedSupplyERC20 is TaxableERC20 {
     }
 
     // Takes a payment value, deducts and transfers a % of it as tax and/or burn, and then returns the remainder.
-    function _adjust(address account, uint256 value) internal override returns (uint256) {
-        uint remainder = super._adjust(account, value);
+    function _collectTax(address account, uint256 value) internal override returns (uint256) {
+        uint remainder = super._collectTax(account, value);
         if (_isInflated()) {
             uint burn_ = (burnRate() * value) / 100;
             _burn(account, burn_);

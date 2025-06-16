@@ -129,8 +129,9 @@ contract MyToken is ERC20 {
 
     function burn(uint amount) external { _burn(_msgSender(), amount); }
 
-    function _transfer(address _from, address _to, uint256 _value) internal override onlyAllowed {
-        super._transfer(_from, _to, _value);
+    function _transfer(address _from, address _to, uint256 _value) internal override onlyAllowed returns (bool success) {
+        ... // custom pre-transfer logic
+        return super._transfer(_from, _to, _value);
     }
 
 }
@@ -153,11 +154,17 @@ contract TestToken is TaxableERC20 {
 
     function symbol() external pure returns(string memory) { return "YODL"; }
 
-    function decimals() external pure returns(uint) { return 0; }
+    function decimals() external pure returns(uint) { return 18; }
 
 }
 ```
 Both `setTaxRate()` and `setTaxAddress()` will accept 0 or `address(0)` as inputs, which disables tax collection. Otherwise, the contract will collect the tax on each transaction and transfer it to another address (such as a `StakingPool`).
+
+In addition, any address can be designated as tax-exempt via `setTaxExempt()`, which will skip tax collection on transfers to or from it. By default, the zero address and tax address are exempt to make minting, burning, and transfers of collected funds tax-free.
+
+Note that both `transfer()` and `transferFrom()` have been routed to go through a new function, `_processTransfer()`, which wraps internal calls to `_transfer()` via `_collectTax()`. This is to avoid overriding `_transfer()` itself, which causes infinite recursion through calls to `super._transfer()` in derived classes.
+
+Finally, keep in mind that transferring ownership does *not* update the tax address automatically, so if some form of this is desired, you will need to override `Ownable.transferOwnership()` and/or `Ownable.renounceOwnership()` in your subclass.
 
 ### ProgressivelyTaxableERC20
 An extension of `TaxableERC20` that implements tax brackets instead of a flat rate. `setTaxRate()` has been overriden to apply a clamp on taxes for all brackets at once, and overloaded to allow creation of new brackets or updates to existing ones.
@@ -182,7 +189,7 @@ contract TestToken is ManagedSupplyERC20 {
     function decimals() external pure returns(uint) { return 0; }
 }
 ```
-Similar to `TaxableERC20`, the contract will collect a % of each transaction to be taxed and/or burned to maintain the supply target set by `setTargetSupply()`.
+Similar to `TaxableERC20`, the contract will collect a % of each transaction to be taxed and/or burned to maintain the supply target set by `setTargetSupply()`. Note that transactions involving tax-exempt addresses are also exempt from automatic burns.
 
 Because the tax limit is shared and enforced by `setTaxRate()` and `burnRate()`, high inflation will prevent raises in the tax rate, and a high tax rate will throttle the burn rate until the supply reaches its target.
 

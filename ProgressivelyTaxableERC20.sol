@@ -7,6 +7,7 @@ abstract contract ProgressivelyTaxableERC20 is TaxableERC20 {
     
     uint[] private _brackets;
     uint8[] private _taxRates;
+    uint8 private _topTaxRate;
     
     event TaxBracketChanged(uint bracket, uint8 taxRate);
 
@@ -42,6 +43,7 @@ abstract contract ProgressivelyTaxableERC20 is TaxableERC20 {
                 _taxRates[i] = _taxRates[i-1];
             }
         }
+        if (taxRate_ > _topTaxRate) _topTaxRate = taxRate_;
         emit TaxBracketChanged(bracket_, taxRate_);
     }
 
@@ -65,9 +67,16 @@ abstract contract ProgressivelyTaxableERC20 is TaxableERC20 {
                 emit TaxBracketChanged(_brackets[i], taxRate_);
             }
         }
+        if (taxRate_ > _topTaxRate) _topTaxRate = taxRate_;
     }
 
-    function _adjust(address account, uint256 value) internal virtual override returns (uint256) {
+    // Override of TaxableERC20.taxRate() to return the highest tax rate (instead of 0) for internal checks.
+    function taxRate() public virtual override view returns (uint8) {
+        return _topTaxRate;
+    }
+
+    // Override of TaxableERC20._collectTax() to justify this class' existence.
+    function _collectTax(address account, uint256 value) internal virtual override returns (uint256) {
         uint tax = 0;
         uint remainder = value;
         for (uint i = 1; i < _brackets.length; i++) { // first bracket is 0 so we start at index = 1
