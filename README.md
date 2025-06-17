@@ -33,13 +33,30 @@ import {Delegated} from "https://github.com/whitgroves/solidity-contracts/blob/m
 
 contract MyContract is Delegated {
 
-    constructor(address initialOwner) Delegated(initialOwner) {}
+    constructor() Delegated(msg.sender) {}
 
     function burn(...) public onlyDelegate { ... }
 
     function mint(...) public onlyOwner { ... }
 }
 ```
+The contract owner is treated as a delegate for all operations, but will not remain delegated unless explicitly added before transferring ownership.
+
+### TimeDelegated
+An extension of `Delegated` that enables time-based delegation for a number of days via an overload to `addDelegate()`. Delgates can add other delegates within the `maxExpiryDays()` set by the owner.
+```
+import {TimeDelegated} from "https://github.com/whitgroves/solidity-contracts/blob/main/TimeDelegated.sol";
+
+contract MyContract is TimeDelegated {
+
+    constructor() TimeDelegated(msg.sender, 365) {} // delegates can sub-delegate for up to a year
+
+    function burn(...) public onlyDelegate { ... }
+
+    function mint(...) public onlyOwner { ... }
+}
+```
+Owner calls to `addDelegate()` without a time limit will set expiry time to `type(uint).max` days, which is basically forever.
 
 ### Restricted
 Another extension of `Ownable` that manages access by enforcing a banlist via the `onlyAllowed` modifier. In effect, this allows the contract owner to make every address a delegate by default, and then remove access from untrusted accounts selectively:
@@ -48,7 +65,7 @@ import {Restricted} from "https://github.com/whitgroves/solidity-contracts/blob/
 
 contract MyContract is Restricted {
 
-    constructor(address initialOwner) Restricted(initialOwner) {}
+    constructor() Restricted(msg.sender) {}
 
     function getTransactionHistory(...) public { ... }
 
@@ -64,7 +81,7 @@ import {AccessControlled} from "https://github.com/whitgroves/solidity-contracts
 
 contract MyContract is AccessControlled {
 
-    constructor(address initialOwner) AccessControlled(initialOwner) {}
+    constructor() AccessControlled(msg.sender) {}
 
     function burn(...) public onlyAllowed { ... }
 
@@ -83,7 +100,7 @@ import {Leasable} from "https://github.com/whitgroves/solidity-contracts/blob/ma
 
 contract MyContract is Leasable {
 
-    constructor(address initialOwner) Leasable(initialOwner) {}
+    constructor() Leasable(msg.sender) {}
 
     function updateConnections(...) public whileLeased onlyOwner { ... }
 
