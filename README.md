@@ -125,7 +125,9 @@ contract TestPool is StakingPool {
     constructor(address tokenAddress_) StakingPool(tokenAddress_, _msgSender()) {}
 }
 ```
-Then transfer and distribute funds as needed. Secondary contracts can be added as delegates to automate the distribution process entirely on-chain.
+Then transfer and distribute funds and call `distribute()` as needed. Secondary users or smart contracts can be added as delegates to offload the distribution process as well.
+
+Note that by default, distributions are allocated to users but not added to their stake; users can set this behavior via `setAutoStake()`, which can also be called by the sublcass if it should be enabled/disabled permanently or by default.
 
 ### ERC20
 An `AccessControlled` implementation of ERC20 with [Pausable](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Pausable.sol) controls. Internal functions for `_mint()` and `_burn()` are included for extensibility, but optional interface members `name()`, `symbol()`, and `decimals()` must be implemented in the subclass:
