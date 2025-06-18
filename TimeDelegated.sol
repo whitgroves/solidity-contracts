@@ -20,6 +20,17 @@ abstract contract TimeDelegated is Delegated {
         setMaxExpiryDays(maxExpiryDays_);
     }
 
+    // Returns the number of days remaining on `delegate`'s delegation, with 0 meaning a same-day expiry.
+    // If they aren't a delegate, the function will revert due to an overflow, which is cheaper than catching the error.
+    function daysTillExpiry(address delegate) external virtual view returns (uint) {
+        if (delegate == owner()) return type(uint).max; // owner is technically not a delegate, but functionally is.
+        return (_expiry[delegate] - block.timestamp) / 1 days;
+    }
+
+    function maxExpiryDays() public virtual view returns (uint) {
+        return _maxExpiryDays;
+    }
+
     // Sets the max number of days a delegate can add another delegate to the contract.
     function setMaxExpiryDays(uint maxExpiryDays_) public virtual onlyOwner {
         _maxExpiryDays = maxExpiryDays_;
@@ -45,20 +56,9 @@ abstract contract TimeDelegated is Delegated {
         emit DelegateRemoved(delegate);
     }
 
-    // Checks if `delegate` is the owner or a delegated account with an upcoming expiry.
+    // Override of Delegated.isDelegate() that checks against expiry date instead of the delegates map.
     function isDelegate(address delegate) public virtual override view returns (bool) {
         return (delegate == owner() || block.timestamp < _expiry[delegate]);
-    }
-
-    // Returns the number of days remaining on `delegate`'s delegation, with 0 meaning a same-day expiry.
-    // If they aren't a delegate, the function will revert due to an overflow, which is cheaper than catching the error.
-    function daysTillExpiry(address delegate) public virtual view returns (uint) {
-        if (delegate == owner()) return type(uint).max; // owner is technically not a delegate, but functionally is.
-        return (_expiry[delegate] - block.timestamp) / 1 days;
-    }
-
-    function maxExpiryDays() public virtual view returns (uint) {
-        return _maxExpiryDays;
     }
 
 }
