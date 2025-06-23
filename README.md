@@ -111,6 +111,23 @@ The contract can be leased out directly or by proxy via `startLease()` and `star
 
 Similarly, the original owner and the tenant can revoke or terminate the lease early via `revokeLease()` and `terminateLease()`, which requires an allowance by the owner to reverse the transaction. Note that even if the lease is revoked on the same day, the tenant will always be charged for at least 1 day's use.
 
+### DemocraticallyOwned
+An extension of `Ownable` that changes ownership by vote. Voters are allowed to participate based on ownership of an `ERC20` or `ERC721` token specified by the initial owner at construction:
+```
+import {DemocraticallyOwned} from "https://github.com/whitgroves/solidity-contracts/blob/main/DemocraticallyOwned.sol";
+
+contract MyContract is DemocraticallyOwned {
+
+    constructor() DemocraticallyOwned(<ERC20/721 token address>, msg.sender) {}
+
+    function manageFunds(...) public notDuringElection onlyOwner { ... }
+
+}
+```
+Elections are started by a call to `transferOwnership` or `renounceOwnership`, which will kick-off a nomination period followed by an election period, (1 and 3 days by default), after which ownership will be locked until any valid participant calls `tally()` to count the votes and transfer ownership of the contract.
+
+The modifiers `duringNomination`, `notDuringNomination`, `duringElection`, and `notDuringElection` are available as control gates for subclass activities, and the minimal interface `IERC20orERC721` is included for calls to `balanceOf` to ensure voters, candidates, and owners can only participate when holding at least 1 of the underlying token.
+
 ## Standalone Contracts
 These contracts are abstract and must be subclassed, but other than that can be deployed as-is.
 
