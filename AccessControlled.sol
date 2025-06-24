@@ -13,11 +13,13 @@ import {Pausable} from "https://github.com/OpenZeppelin/openzeppelin-contracts/b
  */
 abstract contract AccessControlled is Ownable, Pausable, InputValidated {
 
-    mapping(address => bool isActive) private _delegates;
-    mapping(address => bool isBanned) private _banlist;
+    address[] private _delegates; // non-unique list of delegates so they can be cleared on ownership transfer
+    mapping(address => bool) private _isDelegate;
+    mapping(address => bool) private _isBanned;
 
     event DelegateAdded(address indexed delegate);
     event DelegateRemoved(address indexed delegate);
+    event DelegatesCleared();
     event AccountBanned(address indexed account);
     event AccountReinstated(address indexed account);
 
@@ -39,13 +41,13 @@ abstract contract AccessControlled is Ownable, Pausable, InputValidated {
 
     function banAccount(address account) external virtual nonZeroAddress(account) onlyDelegate {
         if (account == owner()) revert("The owner cannot be banned.");
-        _banlist[account] = true;
+        _isBanned[account] = true;
         emit AccountBanned(account);
         if (isDelegate(account)) removeDelegate(account);
     }
 
     function reinstateAccount(address account) external virtual nonZeroAddress(account) onlyOwner {
-        _banlist[account] = false;
+        _isBanned[account] = false;
         emit AccountReinstated(account);
     }
 
@@ -54,22 +56,23 @@ abstract contract AccessControlled is Ownable, Pausable, InputValidated {
     }
 
     function removeDelegate(address account) public virtual nonZeroAddress(account) onlyOwner {
-        _delegates[account] = false;
+        _isDelegate[account] = false;
         emit DelegateRemoved(account);
     }
 
     function addDelegate(address account) public virtual nonZeroAddress(account) onlyOwner {
         if (isBanned(account)) revert("Banned accounts cannot be delegates.");
-        _delegates[account] = true;
+        _isDelegate[account] = true;
+        _delegates.push(account); // see _clearDelegates()
         emit DelegateAdded(account);
     }
 
     function isDelegate(address account) public virtual view returns (bool) {
-        return _delegates[account] || (account == owner());
+        return _isDelegate[account] || (account == owner());
     }
 
     function isBanned(address account) public virtual view returns (bool) {
-        return _banlist[account];
+        return _isBanned[account];
     }
 
     // Wrapper to make Pausable._unpause() available to the contract owner.
@@ -91,6 +94,17 @@ abstract contract AccessControlled is Ownable, Pausable, InputValidated {
     // Override to redefine how the onlyAllowed modifier works in your subclass.
     function _checkAllowed() internal virtual view {
         if (isBanned(_msgSender())) revert UnauthorizedAccessRequest(_msgSender());
+    }
+
+    // Internal that allows all delegates to be cleared on conditions specified by the subclass.
+    function _clearDelegates() internal virtual {
+        for (uint i = 0; i < _delegates.length; i++) {
+            address delegate_ = _delegates[i];
+            if (!_isDelegate[delegate_]) continue;
+            _isDelegate[delegate_] = false;
+        }
+        delete _delegates;
+        emit DelegatesCleared();
     }
 
 }
