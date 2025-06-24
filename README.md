@@ -318,6 +318,8 @@ As shown above, `_requireOriginalOwnership()` is also available for actions whic
 Also note that in constrast to `Leasable`, approved operators will still have authority to act on each token, except to initiate transfers.
 
 ### TradeableERC721
-An extension of `AccessControlledERC721` that allows NFTs to be priced and sold in any ERC20 currency, similar to `TradeableERC20`. The owner of any token(s) can call `setPrice()` and `setForSale()` to make their ERC721 token exchangeable for a number of ERC20 tokens, then any interested party can call `buy()` to execute the trade.
+An extension of `AccessControlledERC721` that allows NFTs to be priced and sold in any ERC20 currency similar to `TradeableERC20`, or traded for an `ERC721` token from another collection. 
 
-Once sold, the token will be automatically taken off of the market to allow the new owner to update the price(s) before listing it for sale again.
+The owner of any NFT in the collection can call `setPrice()` or `setTrade()` to specify which tokens they will accept in exchange for theirs, then interested parties can call `buy()` or `trade()` to make the trade once the owner has enabled it via `setCanTrade()`.
+
+Once exchanged, the token will be automatically taken off of the market to allow the new owner to update any price(s) before making it tradeable again.
