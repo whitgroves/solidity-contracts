@@ -52,12 +52,12 @@ abstract contract AccessControlled is Ownable, Pausable, InputValidated {
     }
 
     function renounceDelegation() external virtual onlyDelegate {
-        removeDelegate(_msgSender());
+        _removeDelegate(_msgSender());
     }
 
+    // Public wrapper for _removeDelegate() to restrict ad-hoc removal to the current owner
     function removeDelegate(address account) public virtual nonZeroAddress(account) onlyOwner {
-        _isDelegate[account] = false;
-        emit DelegateRemoved(account);
+        _removeDelegate(account);
     }
 
     function addDelegate(address account) public virtual nonZeroAddress(account) onlyOwner {
@@ -96,15 +96,20 @@ abstract contract AccessControlled is Ownable, Pausable, InputValidated {
         if (isBanned(_msgSender())) revert UnauthorizedAccessRequest(_msgSender());
     }
 
+    // Internal function to allow delegates to be removed programmatically without checking for ownership first
+    function _removeDelegate(address account) internal virtual {
+        _isDelegate[account] = false;
+        emit DelegateRemoved(account);
+    }
+
     // Internal that allows all delegates to be cleared on conditions specified by the subclass.
     function _clearDelegates() internal virtual {
         for (uint i = 0; i < _delegates.length; i++) {
             address delegate_ = _delegates[i];
             if (!_isDelegate[delegate_]) continue;
-            _isDelegate[delegate_] = false;
+            _removeDelegate(delegate_);
         }
         delete _delegates;
-        emit DelegatesCleared();
     }
 
 }

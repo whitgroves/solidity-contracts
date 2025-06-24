@@ -17,10 +17,12 @@ abstract contract DemocraticallyOwned is AccessControlled {
     address private immutable _tokenAddress;
 
     uint private _nominationStart;
-    uint private _nominationDays = 1;   // initialized to guarantee at least 24 hours of nomination by default
+    uint8 private _nominationDays = 1;   // initialized to guarantee at least 24 hours of nomination by default
     uint private _electionStart;
-    uint private _electionDays = 3;     // initialized to guarantee at least 72 hours of voting by default
+    uint8 private _electionDays = 3;     // initialized to guarantee at least 72 hours of voting by default
     uint private _electionEnd;
+    uint8 private _termDays;             // available to set a minimum number of days for uninterrupted ownership
+    uint private _termEnd;
     bool private _votesTallied = true;  // initialized to true for ownership check
 
     address[] private _candidates;
@@ -54,18 +56,22 @@ abstract contract DemocraticallyOwned is AccessControlled {
         _;
     }
     
-    constructor(address tokenAddress, address initialOwner) AccessControlled(initialOwner) {
-        _tokenAddress = _requireNonZeroAddress(tokenAddress);
+    constructor(address tokenAddress_, address initialOwner) AccessControlled(initialOwner) {
+        _tokenAddress = _requireNonZeroAddress(tokenAddress_);
     }
 
-    function setNominationDays(uint nominationDays_) external virtual notDuringNomination onlyDelegate {
+    function setNominationDays(uint8 nominationDays_) external virtual notDuringNomination onlyDelegate {
         require(nominationDays_ > 0, "Nomination period must be at least 1 day.");
         _nominationDays = nominationDays_;
     }
 
-    function setElectionDays(uint electionDays_) external virtual notDuringNomination notDuringElection onlyDelegate {
+    function setElectionDays(uint8 electionDays_) external virtual notDuringNomination notDuringElection onlyDelegate {
         require(electionDays_ > 0, "Election period must be at least 1 day.");
         _electionDays = electionDays_;
+    }
+
+    function setTermDays(uint8 termDays_) external virtual duringNomination onlyDelegate {
+        _termDays = termDays_;
     }
 
     function vote(address candidate) external virtual duringElection onlyAllowed {
@@ -104,8 +110,10 @@ abstract contract DemocraticallyOwned is AccessControlled {
         _votesTallied = true;
         if (voteLeader_ != owner()) {
             _clearDelegates();
+            _removeDelegate(owner()); // in case previous owner has been explicitly assigned as a delegate
             _transferOwnership(voteLeader_);
         }
+        if (_termDays > 0) _termEnd = _electionEnd + (_termDays * 1 days);
         emit VotesTallied(owner());
     }
 
@@ -134,12 +142,20 @@ abstract contract DemocraticallyOwned is AccessControlled {
         return _lastNomination[candidate] >= _nominationStart;
     }
 
-    function nominationDays() public virtual view returns (uint) {
+    function nominationDays() public virtual view returns (uint8) {
         return _nominationDays;
     }
 
-    function electionDays() public virtual view returns (uint) {
+    function electionDays() public virtual view returns (uint8) {
         return _electionDays;
+    }
+
+    function termDays() public virtual view returns (uint8) {
+        return _termDays;
+    }
+
+    function tokenAddress() public virtual view returns (address) {
+        return _tokenAddress;
     }
 
     function isNominationPeriod() public virtual view returns (bool) {
@@ -174,6 +190,7 @@ abstract contract DemocraticallyOwned is AccessControlled {
 
     function _startElection() internal virtual whenNotPaused notDuringNomination notDuringElection {
         if (!_votesTallied) revert("Outcome of prior election pending. Call tally() first.");
+        if (block.timestamp < _termEnd) revert("Prior term must be completed before calling a new election.");
         _nominationStart = block.timestamp;
         _electionStart = block.timestamp + (_nominationDays * 1 days);
         _electionEnd = _electionStart + (_electionDays * 1 days);

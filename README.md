@@ -323,3 +323,20 @@ An extension of `AccessControlledERC721` that allows NFTs to be priced and sold 
 The owner of any NFT in the collection can call `setPrice()` or `setTrade()` to specify which tokens they will accept in exchange for theirs, then interested parties can call `buy()` or `trade()` to make the trade once the owner has enabled it via `setCanTrade()`.
 
 Once exchanged, the token will be automatically taken off of the market to allow the new owner to update any price(s) before making it tradeable again.
+
+## Other
+
+### TreasuryPool
+A smart contract that pools ERC20 and ERC721 tokens and authorizes them to be managed or spent by proxy. The owner assigns delegates, then calls `authorize()` to approve spending of a specific currency in the pool, or management of NFTs held at the pool's address.
+
+The contract itself inherits from `DemocraticallyOwned`, so the pool itself is goverened by an ERC20 or ERC721 token specified at construction:
+
+```
+import {TreasuryPool} from "https://github.com/whitgroves/solidity-contracts/blob/main/TreasuryPool.sol";
+
+contract TestPool is TreasuryPool {
+    constructor(address <your token>) TreasuryPool(<your token>, _msgSender()) {}
+}
+```
+
+Elections will *not* remove prior authorizations, but new authorizations are locked until the election cycle is complete. If ownership changes after the vote, all delegates will be removed and have their authorizations revoked, including the previous owner.

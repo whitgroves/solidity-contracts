@@ -57,7 +57,7 @@ abstract contract AccessControlledERC721 is IERC165, IERC721, AccessControlled {
 
     function setApprovalForAll(address operator, bool _approved) external virtual {
         address owner = _msgSender();
-        _operators[owner][operator] == _approved;
+        _operators[owner][operator] = _approved;
         emit ApprovalForAll(owner, operator, _approved);
     }
 
@@ -118,7 +118,7 @@ abstract contract AccessControlledERC721 is IERC165, IERC721, AccessControlled {
         address owner = _requireNonZeroAddress(_owners[tokenId]);
         if (owner == sender) return owner;
         if (ownerOnly) revert ERC721UnauthorizedAccess(tokenId);
-        if (sender != _approvals[tokenId] && _operators[owner][sender] == false) 
+        if ((sender != _approvals[tokenId]) && (_operators[owner][sender] == false)) 
             revert ERC721UnauthorizedAccess(tokenId);
         return owner;
     }
