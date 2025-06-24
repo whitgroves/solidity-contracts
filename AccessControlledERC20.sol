@@ -7,7 +7,7 @@ import {AccessControlled} from "./AccessControlled.sol";
 import {IERC20} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
 import {Pausable} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Pausable.sol";
 
-abstract contract ERC20 is IERC20, AccessControlled, Pausable {
+abstract contract AccessControlledERC20 is IERC20, AccessControlled, Pausable {
 
     uint private _totalSupply;
     mapping(address => uint) private _balances;

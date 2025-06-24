@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSE
 pragma solidity ^0.8.20;
 
-import {ERC20} from "./ERC20.sol";
+import {AccessControlledERC20} from "./AccessControlledERC20.sol";
 
 // An extension of ERC20 which implements an adjustable transaction tax and optional tax cap of 0-99%.
-abstract contract TaxableERC20 is ERC20 {
+abstract contract TaxableERC20 is AccessControlledERC20 {
 
     uint8 private immutable MAX_TAX_RATE;
     address private _taxAddress;

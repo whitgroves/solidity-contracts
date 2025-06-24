@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSE
 pragma solidity ^0.8.20;
 
-import {ERC721} from "./ERC721.sol";
+import {AccessControlledERC721} from "./AccessControlledERC721.sol";
 
 // Imported code license: MIT
 import {IERC20} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
@@ -26,7 +26,7 @@ abstract contract LeasableERC721 is ERC721 {
     event ERC721TokenLeased(address tenant, uint leaseEnd, uint tokenId);
     event ERC721TokenLeaseRevoked(address tenant, address owner, uint tokenId);
 
-    constructor(address initialOwner) ERC721(initialOwner) {}
+    constructor(address initialOwner) AccessControlledERC721(initialOwner) {}
 
     // Anyone authorized through IERC721 can update the lease terms on the token, assuming a lease is not active.
     // Setting max lease days to 0 permits an unlimited lease time.

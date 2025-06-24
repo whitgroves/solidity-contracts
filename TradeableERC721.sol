@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: UNLICENSE
 pragma solidity ^0.8.20;
 
-import {ERC721} from "./ERC721.sol";
+import {AccessControlledERC721} from "./AccessControlledERC721.sol";
 
 // Imported code license: MIT
 import {IERC20} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
 
 /* 
- * An extension of ERC721 which allows for the trading of NFTs in exchange for ERC20 tokens at a price set by the owner.
+ * An extension of AccessControlledERC721 which allows for the trading of NFTs in exchange for ERC20 tokens at a price 
+ * set by the owner.
  * 
  * Note that this version of ERC721 inherits AccessControlled, which adds permission controls at the contract level.
  */
-abstract contract TradeableERC721 is ERC721 {
+abstract contract TradeableERC721 is AccessControlledERC721 {
 
     mapping(uint => bool) private _forSale;
     mapping(uint => mapping(address => uint)) private _prices;
@@ -19,7 +20,7 @@ abstract contract TradeableERC721 is ERC721 {
     event ERC721TokenListedForSale(uint tokenId);
     event ERC721TokenSold(address currency, uint price, uint tokenId);
 
-    constructor(address initialOwner) ERC721(initialOwner) {}
+    constructor(address initialOwner) AccessControlledERC721(initialOwner) {}
 
     function setPrice(address currency, uint amount, uint tokenId) external virtual {
         _requireOwnership(tokenId);

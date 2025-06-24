@@ -17,7 +17,7 @@ import {IERC20} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blo
  *
  * The staking pool is paused by default, and can only be unpaused by the owner. A retired pool cannot be unpaused.
  */
-abstract contract StakingPool is AccessControlled, Pausable {
+abstract contract ERC20StakingPool is AccessControlled, Pausable {
     
     bool private _retired;
     uint private _totalStaked;

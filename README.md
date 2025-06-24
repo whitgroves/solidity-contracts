@@ -1,11 +1,12 @@
 # smart-contracts
 
-A collection of smart contracts meant to extend ERC20 and ERC721 tokens.
+A collection of smart contracts meant to provide [access controls](#ownership--access-controls) or extend [ERC20](#erc20-extensions) and [ERC721](#erc721-extensions) tokens through inherited modifiers and/or methods.
 
 These contracts have been unlicensed and are freely available for any use, but be aware that they import code from contracts with different (but still permissable) licenses.
 
-## Contract Extensions
-These are meant to extend existing contracts by adding modifiers and/or access controls.
+All are abstract, but most include a code snippet showing how to use them in a minimal subclass.
+
+## Ownership & Access Controls
 
 ### InputValidated
 A simple contract that supplies input validations so they can be inherited instead of rewritten. Makes several errors, modifiers, and internal functions available to its subclasses:
@@ -128,32 +129,31 @@ Elections are started by a call to `transferOwnership` or `renounceOwnership`, w
 
 The modifiers `duringNomination`, `notDuringNomination`, `duringElection`, and `notDuringElection` are available as control gates for subclass activities, and the minimal interface `IERC20orERC721` is included for calls to `balanceOf` to ensure voters, candidates, and owners can only participate when holding at least 1 of the underlying token.
 
-## Standalone Contracts
-These contracts are abstract and must be subclassed, but other than that can be deployed as-is.
+## ERC20 Extensions
 
-### StakingPool
+### ERC20StakingPool
 An `AccessControlled` revision of [StakingPool](https://github.com/whitgroves/staking-pool) using OpenZeppelin's [Pausable](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Pausable.sol) for emergency stop controls. Note that in this version, the only way to destake a pool is to retire it.
 
 To use, deploy the contract as such:
 ```
-import {StakingPool} from "https://github.com/whitgroves/solidity-contracts/blob/main/StakingPool.sol";
+import {ERC20StakingPool} from "https://github.com/whitgroves/solidity-contracts/blob/main/ERC20StakingPool.sol";
 
-contract TestPool is StakingPool {
-    constructor(address tokenAddress_) StakingPool(tokenAddress_, _msgSender()) {}
+contract TestPool is ERC20StakingPool {
+    constructor(address tokenAddress_) ERC20StakingPool(tokenAddress_, _msgSender()) {}
 }
 ```
 Then transfer and distribute funds and call `distribute()` as needed. Secondary users or smart contracts can be added as delegates to offload the distribution process as well.
 
 Note that by default, distributions are allocated to users but not added to their stake; users can set this behavior via `setAutoStake()`, which can also be called by the sublcass if it should be enabled/disabled permanently or by default.
 
-### ERC20
+### AccessControlledERC20
 An `AccessControlled` implementation of ERC20 with [Pausable](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Pausable.sol) controls. Internal functions for `_mint()` and `_burn()` are included for extensibility, but optional interface members `name()`, `symbol()`, and `decimals()` must be implemented in the subclass:
 ```
-import {ERC20} from "https://github.com/whitgroves/solidity-contracts/blob/main/ERC20.sol";
+import {AccessControlledERC20} from "https://github.com/whitgroves/solidity-contracts/blob/main/AccessControlledERC20.sol";
 
-contract MyToken is ERC20 {
+contract MyToken is AccessControlledERC20 {
     
-    constructor() ERC20(msg.sender) {}
+    constructor() AccessControlledERC20(msg.sender) {}
 
     function name() external pure returns(string memory) { return "Your Own Distributed Ledger"; }
 
@@ -174,7 +174,7 @@ contract MyToken is ERC20 {
 ```
 
 ### TaxableERC20
-An extension of `ERC20` that implements an adjustable transaction tax and an optional tax cap. On construction, a maximum tax rate of 0-99% must be set that will be enforced on all tax cap changes for the lifetime of the contract; if a value larger than 99 is passed to the constructor, it will be clamped to 99%:
+An extension of `AccessControlledERC20` that implements an adjustable transaction tax and an optional tax cap. On construction, a maximum tax rate of 0-99% must be set that will be enforced on all tax cap changes for the lifetime of the contract; if a value larger than 99 is passed to the constructor, it will be clamped to 99%:
 ```
 import {TaxableERC20} from "https://github.com/whitgroves/solidity-contracts/blob/main/TaxableERC20.sol";
 
@@ -258,7 +258,7 @@ In addition, a public `mint()` function wraps ERC20's `_mint()` so the contract 
 Similarly, a public `burn()` function is available so tokens may be burned manually, but only by the account that holds them.
 
 ### TradeableERC20
-Another extension of `ERC20` that allows trades of that token in exchange for any other ERC20 token. Deployment is similar to `ManagedSupplyERC20`:
+Another extension of `AccessControlledERC20` that allows trades of that token in exchange for any other ERC20 token. Deployment is similar to `ManagedSupplyERC20`:
 ```
 import {TradeableERC20} from "https://github.com/whitgroves/solidity-contracts/blob/main/TradeableERC20.sol";
 
@@ -285,11 +285,13 @@ Transfers are routed through this contract, which requires an allowance on the t
 
 Once a trade is complete, the contract will emit the `ERC20TokensTraded` event with the currencies and amounts exchanged for any off-chain listeners.
 
-### ERC721
+## ERC721 Extensions
+
+### AccessControlledERC721
 An `AccessControlled` implementation of `IERC721`, with `mint()` and `burn()` functions added. Functionally a delegated version of OpenZeppelin's [`ERC721`](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/ERC721.sol) contract, except it doesn't implement `IERC721Metadata`. Created for extensibility of per-item access permissions.
 
 ### LeasableERC721
-An extension of `ERC721` that implements `Leasable`-like permissions on individual tokens. Calls to `ownerOf()` will still show the original owner's address, but `tenantOf()` is made available to confirm rentership in the application layer.
+An extension of `AccessControlledERC721` that implements `Leasable`-like permissions on individual tokens. Calls to `ownerOf()` will still show the original owner's address, but `tenantOf()` is made available to confirm rentership in the application layer.
 
 To make use of this extension, include a call to `_requireOwnership()` or `_requireApproved()` at the start of your subclass methods, which will restrict specific actions to owners and approved operators, while transferring that authority to the tenant while leased:
 
@@ -315,7 +317,7 @@ As shown above, `_requireOriginalOwnership()` is also available for actions whic
 
 Also note that in constrast to `Leasable`, approved operators will still have authority to act on each token, except to initiate transfers.
 
-### TradeableERC20
-An extension of `ERC721` that allows NFTs to be priced and sold in any ERC20 currency, similar to `TradeableERC20`. The owner of any token(s) can call `setPrice()` and `setForSale()` to make their ERC721 token exchangeable for a number of ERC20 tokens, then any interested party can call `buy()` to execute the trade.
+### TradeableERC721
+An extension of `AccessControlledERC721` that allows NFTs to be priced and sold in any ERC20 currency, similar to `TradeableERC20`. The owner of any token(s) can call `setPrice()` and `setForSale()` to make their ERC721 token exchangeable for a number of ERC20 tokens, then any interested party can call `buy()` to execute the trade.
 
 Once sold, the token will be automatically taken off of the market to allow the new owner to update the price(s) before listing it for sale again.
