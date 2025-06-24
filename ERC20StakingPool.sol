@@ -4,7 +4,6 @@ pragma solidity ^0.8.20;
 import {AccessControlled} from "./AccessControlled.sol";
 
 // Imported code license: MIT
-import {Pausable} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Pausable.sol";
 import {IERC20} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
 
 /* 
@@ -14,10 +13,8 @@ import {IERC20} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blo
  *
  * Calls to stake() must be pre-approved via IERC20.approve() on the original token. Other transfers will be 
  * treated as deposits to be distributed to stakeholders.
- *
- * The staking pool is paused by default, and can only be unpaused by the owner. A retired pool cannot be unpaused.
  */
-abstract contract ERC20StakingPool is AccessControlled, Pausable {
+abstract contract ERC20StakingPool is AccessControlled {
     
     bool private _retired;
     uint private _totalStaked;
@@ -130,15 +127,10 @@ abstract contract ERC20StakingPool is AccessControlled, Pausable {
 
     function tokenAddress() public virtual view returns (address) { return _tokenAddress; }
 
-    // Wrapper to make Pausable._unpause() available to the contract owner, assuming the pool isn't retired.
-    function unpause() public virtual onlyOwner {
+    // Override to restrict unpause() to non-retired pools.
+    function unpause() public override {
         require(retired() == false, "A retired pool cannot be unpaused. Redeploy a new contract instead.");
-        _unpause();
-    }
-
-    // Wrapper to make Pausable._pause() available to the contract owner or their delegates.
-    function pause() public virtual onlyDelegate {
-        _pause();
+        super.unpause();
     }
 
     function token() internal virtual returns (IERC20) {

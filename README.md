@@ -76,7 +76,7 @@ contract MyContract is Restricted {
 The owner may ban or reinstate any account using `banAccount()` or `reinstateAccount()`, and any user can see which addresses are banned via `isBanned()`.
 
 ### AccessControlled
-An extension of `Ownable` that implements both `Delegated` and `Restricted` to avoid inheritance collision. All features work as described above, except that banning an account will also remove their delegate status, and banned accounts cannot be delegated.
+An extension of OpenZeppelin;s `Ownable` and `Pausable` that implements both `Delegated` and `Restricted`. All features work as described above, except that banning an account will also remove their delegate status, and banned accounts cannot be delegated.
 ```
 import {AccessControlled} from "https://github.com/whitgroves/solidity-contracts/blob/main/AccessControlled.sol";
 

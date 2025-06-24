@@ -7,9 +7,8 @@ import {AccessControlled} from "./AccessControlled.sol";
 import {IERC165} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/introspection/IERC165.sol";
 import {IERC721} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/IERC721.sol";
 import {IERC721Receiver} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/IERC721Receiver.sol";
-import {Pausable} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Pausable.sol";
 
-abstract contract AccessControlledERC721 is IERC165, IERC721, AccessControlled, Pausable {
+abstract contract AccessControlledERC721 is IERC165, IERC721, AccessControlled {
 
     bytes4 private constant RECEIVER_HANDSHAKE = bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
 

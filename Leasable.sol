@@ -85,7 +85,9 @@ abstract contract Leasable is AccessControlled {
 
     function maxLeaseDays() public virtual view returns (uint) { return _maxLeaseDays; }
     
-    function _lease(address tenant_, address currency, uint leaseDays) internal virtual notWhileLeased nonZeroAddress(tenant_) {
+    function _lease(address tenant_, address currency, uint leaseDays) internal virtual
+        whenNotPaused notWhileLeased nonZeroAddress(tenant_) 
+    {
         require(leaseDays > 0, "Must lease for a specified amount of time.");
         if (_maxLeaseDays > 0 && leaseDays > _maxLeaseDays) revert("Contract not leasable for requested time.");
         uint leasePrice = _pricePerDay[currency] * leaseDays;

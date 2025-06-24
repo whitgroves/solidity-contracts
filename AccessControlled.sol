@@ -5,12 +5,13 @@ import {InputValidated} from "./InputValidated.sol";
 
 // Imported code license: MIT
 import {Ownable} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol";
+import {Pausable} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Pausable.sol";
 
 /* 
- * An extension of Ownable that implements both Delegated and Restricted permissions to allow inheritance of both
- * without overriding their shared methods from Ownable.
+ * An extension of Ownable and Pausable that implements both Delegated and Restricted permissions to allow inheritance
+ * from all four without overriding their shared methods.
  */
-abstract contract AccessControlled is Ownable, InputValidated {
+abstract contract AccessControlled is Ownable, Pausable, InputValidated {
 
     mapping(address => bool isActive) private _delegates;
     mapping(address => bool isBanned) private _banlist;
@@ -69,6 +70,17 @@ abstract contract AccessControlled is Ownable, InputValidated {
 
     function isBanned(address account) public virtual view returns (bool) {
         return _banlist[account];
+    }
+
+    // Wrapper to make Pausable._unpause() available to the contract owner.
+    // If this access should be extended, override without the modifier and make a direct call to _unpause().
+    function unpause() public virtual onlyOwner {
+        _unpause();
+    }
+
+    // Wrapper to make Pausable._pause() available to the contract delegates.
+    function pause() public virtual onlyDelegate {
+        _pause();
     }
 
     // Override to redefine how the onlyDelegate modifier works in your subclass.
