@@ -333,9 +333,15 @@ The contract itself inherits from `DemocraticallyOwned`, so the pool itself is g
 
 ```
 import {TreasuryPool} from "https://github.com/whitgroves/solidity-contracts/blob/main/TreasuryPool.sol";
+import {IERC20orERC721} from "https://github.com/whitgroves/solidity-contracts/blob/main/DemocraticallyOwned.sol";
 
 contract TestPool is TreasuryPool {
     constructor(address <your token>) TreasuryPool(<your token>, _msgSender()) {}
+
+    // Override to scale voting power with underlying token ownership.
+    function votingPower(address voter) public override view returns (uint) {
+        return IERC20orERC721(tokenAddress()).balanceOf(voter);
+    }
 }
 ```
 

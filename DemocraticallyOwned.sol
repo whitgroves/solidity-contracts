@@ -79,7 +79,7 @@ abstract contract DemocraticallyOwned is AccessControlled {
         if (!isCandidate(candidate)) revert("Selected address is not a nomiated candidate.");
         if (!canParticipate(candidate)) revert InvalidParticipant(candidate);
         _lastVote[_msgSender()] = block.timestamp;
-        _votes[candidate] += 1;
+        _votes[candidate] += votingPower(_msgSender());
     }
 
     function nominate(address candidate) public virtual nonZeroAddress(candidate) duringNomination onlyAllowed {
@@ -136,6 +136,12 @@ abstract contract DemocraticallyOwned is AccessControlled {
 
     function hasVoted(address voter) public virtual view returns (bool) {
         return _lastVote[voter] >= _electionStart;
+    }
+
+    // Virtual function to return voting power in case subclass wants to scale votes in another way.
+    // For example, to scale power with token ownership, return `IERC20orERC721(_tokenAddress).balanceOf(voter)`)
+    function votingPower(address voter) public virtual view returns (uint) {
+        return 1;
     }
 
     function isCandidate(address candidate) public virtual view returns (bool) {
