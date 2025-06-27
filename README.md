@@ -131,21 +131,6 @@ The modifiers `duringNomination`, `notDuringNomination`, `duringElection`, and `
 
 ## ERC20 Extensions
 
-### ERC20StakingPool
-An `AccessControlled` revision of [StakingPool](https://github.com/whitgroves/staking-pool) using OpenZeppelin's [Pausable](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Pausable.sol) for emergency stop controls. Note that in this version, the only way to destake a pool is to retire it.
-
-To use, deploy the contract as such:
-```
-import {ERC20StakingPool} from "https://github.com/whitgroves/solidity-contracts/blob/main/ERC20StakingPool.sol";
-
-contract TestPool is ERC20StakingPool {
-    constructor(address tokenAddress_) ERC20StakingPool(tokenAddress_, _msgSender()) {}
-}
-```
-Then transfer and distribute funds and call `distribute()` as needed. Secondary users or smart contracts can be added as delegates to offload the distribution process as well.
-
-Note that by default, distributions are allocated to users but not added to their stake; users can set this behavior via `setAutoStake()`, which can also be called by the sublcass if it should be enabled/disabled permanently or by default.
-
 ### AccessControlledERC20
 An `AccessControlled` implementation of ERC20 with [Pausable](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Pausable.sol) controls. Internal functions for `_mint()` and `_burn()` are included for extensibility, but optional interface members `name()`, `symbol()`, and `decimals()` must be implemented in the subclass:
 ```
@@ -326,6 +311,21 @@ Once exchanged, the token will be automatically taken off of the market to allow
 
 ## Other
 
+### StakingPool
+An `AccessControlled` revision of [StakingPool](https://github.com/whitgroves/staking-pool) using OpenZeppelin's [Pausable](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Pausable.sol) for emergency stop controls. Note that in this version, the only way to destake a pool is to retire it.
+
+To use, deploy the contract as such:
+```
+import {StakingPool} from "https://github.com/whitgroves/solidity-contracts/blob/main/StakingPool.sol";
+
+contract TestPool is StakingPool {
+    constructor(address tokenAddress_) StakingPool(tokenAddress_, _msgSender()) {}
+}
+```
+Then transfer and distribute funds and call `distribute()` as needed. Secondary users or smart contracts can be added as delegates to offload the distribution process as well.
+
+Note that by default, distributions are allocated to users but not added to their stake; users can set this behavior via `setAutoStake()`, which can also be called by the sublcass if it should be enabled/disabled permanently or by default.
+
 ### TreasuryPool
 A smart contract that pools ERC20 and ERC721 tokens and authorizes them to be managed or spent by proxy. The owner assigns delegates, then calls `authorize()` to approve spending of a specific currency in the pool, or management of NFTs held at the pool's address.
 
@@ -346,3 +346,15 @@ contract TestPool is TreasuryPool {
 ```
 
 Elections will *not* remove prior authorizations, but new authorizations are locked until the election cycle is complete. If ownership changes after the vote, all delegates will be removed and have their authorizations revoked, including the previous owner.
+
+### PaymentSplitter
+An `AccessControlled` contract that can hold and redistribute ERC20 tokens to enrolled addresses according to a relative payscale set by the owner or their delegates. Once distributed, these funds can only be withdrawn by the enrolled parties, but the owner can transfer any unallocated funds in a specified currency to another address at any time.
+
+The contract is ready-to-use without any modifications:
+```
+import {PaymentSplitter} from "https://github.com/whitgroves/solidity-contracts/blob/main/PaymentSplitter.sol";
+
+contract MyPayroll is PaymentSplitter {
+    constructor() PaymentSplitter(_msgSender()) {}
+}
+```

@@ -14,7 +14,7 @@ import {IERC20} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blo
  * Calls to stake() must be pre-approved via IERC20.approve() on the original token. Other transfers will be 
  * treated as deposits to be distributed to stakeholders.
  */
-abstract contract ERC20StakingPool is AccessControlled {
+abstract contract StakingPool is AccessControlled {
     
     bool private _retired;
     uint private _totalStaked;
