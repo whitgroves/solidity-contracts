@@ -2,11 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {AccessControlled} from "./AccessControlled.sol";
-
-/* A shared interface to support interacting with both ERC20 and ERC721 tokens when only ownership is required.*/
-interface IERC20orERC721 {
-    function balanceOf(address owner) external view returns (uint256);
-}
+import {IERC20orERC721} from "./IERC20orERC721.sol";
 
 /* 
  * A smart contract that changes ownership by vote. Voters are allowed to participate based on ownership of an ERC20 or 
@@ -57,7 +53,8 @@ abstract contract DemocraticallyOwned is AccessControlled {
     }
     
     constructor(address tokenAddress_, address initialOwner) AccessControlled(initialOwner) {
-        _tokenAddress = _requireNonZeroAddress(tokenAddress_);
+        if (!canParticipate(initialOwner)) revert("Initial owner must meet participation requirements.");
+        _tokenAddress = tokenAddress_;
     }
 
     function setNominationDays(uint8 nominationDays_) external virtual notDuringNomination onlyDelegate {
@@ -110,7 +107,6 @@ abstract contract DemocraticallyOwned is AccessControlled {
         _votesTallied = true;
         if (voteLeader_ != owner()) {
             _clearDelegates();
-            _removeDelegate(owner()); // in case previous owner has been explicitly assigned as a delegate
             _transferOwnership(voteLeader_);
         }
         if (_termDays > 0) _termEnd = _electionEnd + (_termDays * 1 days);
@@ -124,8 +120,10 @@ abstract contract DemocraticallyOwned is AccessControlled {
     }
 
     // Attempts to transfer ownership by starting an election for the new one and nominating the proposed address.
-    // Lacks the onlyOwner restriction so any valid participant can kick off an election.
+    // Lacks the onlyOwner restriction so any valid participant can start an election at the end of the current term,
+    // or immediately if the owner is no longer a valid participant.
     function transferOwnership(address candidate) public override onlyAllowed {
+        if (!canParticipate(owner())) _termEnd = block.timestamp;
         _startElection();
         nominate(candidate);
     }

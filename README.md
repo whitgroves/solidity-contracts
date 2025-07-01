@@ -113,7 +113,7 @@ The contract can be leased out directly or by proxy via `startLease()` and `star
 Similarly, the original owner and the tenant can revoke or terminate the lease early via `revokeLease()` and `terminateLease()`, which requires an allowance by the owner to reverse the transaction. Note that even if the lease is revoked on the same day, the tenant will always be charged for at least 1 day's use.
 
 ### DemocraticallyOwned
-An extension of `Ownable` that changes ownership by vote. Voters are allowed to participate based on ownership of an `ERC20` or `ERC721` token specified by the initial owner at construction:
+An extension of `AccessControlled` that changes ownership by vote. Voters are allowed to participate based on ownership of an `ERC20` or `ERC721` token specified by the initial owner at construction:
 ```
 import {DemocraticallyOwned} from "https://github.com/whitgroves/solidity-contracts/blob/main/DemocraticallyOwned.sol";
 
@@ -128,6 +128,11 @@ contract MyContract is DemocraticallyOwned {
 Elections are started by a call to `transferOwnership` or `renounceOwnership`, which will kick-off a nomination period followed by an election period, (1 and 3 days by default), after which ownership will be locked until any valid participant calls `tally()` to count the votes and transfer ownership of the contract.
 
 The modifiers `duringNomination`, `notDuringNomination`, `duringElection`, and `notDuringElection` are available as control gates for subclass activities, and the minimal interface `IERC20orERC721` is included for calls to `balanceOf` to ensure voters, candidates, and owners can only participate when holding at least 1 of the underlying token.
+
+### MajorityOwned
+An extension of `AccessControlled` where ownership is determined by the balance of an underlying ERC20 or ERC721 token. While the contract is unpaused, any account can call `claimOwnership()` to take ownership if they hold more of the underlying token than the current owner.
+
+Note that this allows contracts with renounced ownership to be reclaimed later, unless the token has implemented their burn function in a non-standard way.
 
 ## ERC20 Extensions
 
@@ -311,6 +316,9 @@ Once exchanged, the token will be automatically taken off of the market to allow
 
 ## Other
 
+### IERC20orERC721
+A minimal interface to make `balanceOf()` available to contracts that want to check the balance of an account's ERC20 or ERC721 tokens.
+
 ### StakingPool
 An `AccessControlled` revision of [StakingPool](https://github.com/whitgroves/staking-pool) using OpenZeppelin's [Pausable](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Pausable.sol) for emergency stop controls. Note that in this version, the only way to destake a pool is to retire it.
 
@@ -333,7 +341,7 @@ The contract itself inherits from `DemocraticallyOwned`, so the pool itself is g
 
 ```
 import {TreasuryPool} from "https://github.com/whitgroves/solidity-contracts/blob/main/TreasuryPool.sol";
-import {IERC20orERC721} from "https://github.com/whitgroves/solidity-contracts/blob/main/DemocraticallyOwned.sol";
+import {IERC20orERC721} from "https://github.com/whitgroves/solidity-contracts/blob/main/IERC20orERC721.sol";
 
 contract TestPool is TreasuryPool {
     constructor(address <your token>) TreasuryPool(<your token>, _msgSender()) {}
