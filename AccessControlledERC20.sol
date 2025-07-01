@@ -5,8 +5,9 @@ import {AccessControlled} from "./AccessControlled.sol";
 
 // Imported code license: MIT
 import {IERC20} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
+import {IERC165} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/introspection/IERC165.sol";
 
-abstract contract AccessControlledERC20 is IERC20, AccessControlled {
+abstract contract AccessControlledERC20 is AccessControlled, IERC20, IERC165 {
 
     uint private _totalSupply;
     mapping(address => uint) private _balances;
@@ -16,6 +17,8 @@ abstract contract AccessControlledERC20 is IERC20, AccessControlled {
     error ERC20InsufficientAllowance(address account, address spender);
 
     constructor(address initialOwner) AccessControlled(initialOwner) {}
+
+    // IERC20
 
     function totalSupply() public virtual view returns (uint256) {
         return _totalSupply;
@@ -45,6 +48,15 @@ abstract contract AccessControlledERC20 is IERC20, AccessControlled {
     function allowance(address _owner, address _spender) public virtual view nonZeroAddress(_owner) returns (uint256 remaining) {
         return _allowances[_owner][_spender];
     }
+
+    // IERC165
+
+    function supportsInterface(bytes4 interfaceId) external virtual view returns (bool) {
+        return (interfaceId == type(IERC20).interfaceId ||
+                interfaceId == type(IERC165).interfaceId);
+    }
+
+    // internal
 
     function _transfer(address _from, address _to, uint256 _value) internal virtual whenNotPaused onlyAllowed 
         returns (bool success) 
