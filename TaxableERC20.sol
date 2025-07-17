@@ -6,7 +6,8 @@ import {AccessControlledERC20} from "./AccessControlledERC20.sol";
 // An extension of ERC20 which implements an adjustable transaction tax and optional tax cap of 0-99%.
 abstract contract TaxableERC20 is AccessControlledERC20 {
 
-    uint8 private immutable MAX_TAX_RATE;
+    uint8 private constant MAX_TAX_RATE = 99; // strongly enforced since >= 100% tax is pointless
+
     address private _taxAddress;
     uint8 private _taxRate;
     uint8 private _taxCap;
@@ -17,8 +18,7 @@ abstract contract TaxableERC20 is AccessControlledERC20 {
     event TaxExemptionGranted(address account);
     event TaxExemptionRemoved(address account);
 
-    constructor(address initialOwner, uint8 maxTaxRate_) ERC20(initialOwner) {
-        MAX_TAX_RATE = maxTaxRate_ > 99 ? 99 : maxTaxRate_; // strongly enforced since >= 100% tax is pointless
+    constructor(address initialOwner) ERC20(initialOwner) {
         setTaxCap(MAX_TAX_RATE);
         setTaxExempt(address(0), true); // no tax on mints
     }

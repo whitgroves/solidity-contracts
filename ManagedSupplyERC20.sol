@@ -10,19 +10,34 @@ import {TaxableERC20} from "./TaxableERC20.sol";
 abstract contract ManagedSupplyERC20 is TaxableERC20 {
     
     uint256 private _targetSupply;
+    uint private _lastTargetSupplyUpdate;
+    uint private _targetSupplyUpdateBuffer;
 
     event SupplyTargetChanged(uint256 previousTarget, uint256 newTarget, uint256 currentSupply);
 
-    constructor(address initialOwner, uint256 targetSupply_, uint8 maxTaxRate_) 
-        TaxableERC20(initialOwner, maxTaxRate_)
-    {
+    constructor(address initialOwner, uint256 targetSupply_) TaxableERC20(initialOwner) {
         setTargetSupply(targetSupply_);
     }
 
-    function setTargetSupply(uint256 targetSupply_) public virtual onlyOwner {
-        require (targetSupply_ > 0, "The target supply must be at least 1.");
+    // Sets an optional buffer to prevent updates to the target supply for `targetSupplyUpdateBuffer_` seconds.
+    // Note that setting the buffer > 0 makes `setTargetSupply()` delegated instead of onlyOwner.
+    function setTargetSupplyUpdateBuffer(uint targetSupplyUpdateBuffer_) public virtual onlyOwner {
+        _targetSupplyUpdateBuffer = targetSupplyUpdateBuffer_;
+    }
+
+    // Sets the target supply to `targetSupply_` tokens. If an update buffer has been set, the function will be treated
+    // as delegated contingent on enough time passing since the last update. Otherwise, this function is onlyOwner.
+    function setTargetSupply(uint256 targetSupply_) public virtual {
+        require(targetSupply_ > 0, "The target supply must be at least 1.");
+        if (_targetSupplyUpdateBuffer > 0) {
+            _checkDelegate();
+            if (block.timestamp < (_lastTargetSupplyUpdate + _targetSupplyUpdateBuffer)) 
+                revert("Target supply updates are buffered. Reduce buffer or wait until buffer time is reached.");
+        }
+        else _checkOwner();
         emit SupplyTargetChanged(_targetSupply, targetSupply_, totalSupply());
         _targetSupply = targetSupply_;
+        _lastTargetSupplyUpdate = block.timestamp;
     }
 
     function targetSupply() public virtual view returns (uint256) {

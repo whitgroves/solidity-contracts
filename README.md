@@ -164,13 +164,13 @@ contract MyToken is AccessControlledERC20 {
 ```
 
 ### TaxableERC20
-An extension of `AccessControlledERC20` that implements an adjustable transaction tax and an optional tax cap. On construction, a maximum tax rate of 0-99% must be set that will be enforced on all tax cap changes for the lifetime of the contract; if a value larger than 99 is passed to the constructor, it will be clamped to 99%:
+An extension of `AccessControlledERC20` that implements an adjustable transaction tax of up to 99%:
 ```
 import {TaxableERC20} from "https://github.com/whitgroves/solidity-contracts/blob/main/TaxableERC20.sol";
 
 contract MyToken is TaxableERC20 {
     
-    constructor() TaxableERC20(msg.sender, 100) { // even though 100 is passed, max rate will be 99%
+    constructor() TaxableERC20(msg.sender) { // default max rate is 99%
         _mint(msg.sender, 1000);
         setTaxAddress(msg.sender);
         setTaxRate(15); // 15%
@@ -203,7 +203,7 @@ import {ProgressivelyTaxableERC20} from "https://github.com/whitgroves/solidity-
 
 contract MyToken is ProgressivelyTaxableERC20 {
     
-    constructor() ProgressivelyTaxableERC20(msg.sender, 100) { // even though 100 is passed, max rate will be 99%
+    constructor() ProgressivelyTaxableERC20(msg.sender) {
         _mint(msg.sender, 100000);
         setTaxAddress(msg.sender);
         setTaxRate(10, 1); // brackets are ordered here, but will self-sort on addition
@@ -230,7 +230,7 @@ import {ManagedSupplyERC20} from "https://github.com/whitgroves/solidity-contrac
 
 contract MyToken is ManagedSupplyERC20 {
     
-    constructor() ManagedSupplyERC20(msg.sender, 10000, 100) {} // `mint()` is made public so tokens can be minted later
+    constructor() ManagedSupplyERC20(msg.sender, 10000) {} // `mint()` is public so tokens can be minted later
 
     function name() external pure returns(string memory) { return "Central Reserve Token"; }
 
@@ -239,7 +239,7 @@ contract MyToken is ManagedSupplyERC20 {
     function decimals() external pure returns(uint) { return 18; }
 }
 ```
-Similar to `TaxableERC20`, the contract will collect a % of each transaction to be taxed and/or burned to maintain the supply target set by `setTargetSupply()`. Note that transactions involving tax-exempt addresses are also exempt from automatic burns.
+Similar to `TaxableERC20`, the contract will collect a % of transactions between non-exempt addresses to be taxed and/or burned to maintain the supply target set by `setTargetSupply()`. This function is treated as owner-only, unless the owner sets an update buffer via `setTargetSupplyUpdateBuffer()`, which will then treat target supply updates as delegated.
 
 Because the tax limit is shared and enforced by `setTaxRate()` and `burnRate()`, high inflation will prevent raises in the tax rate, and a high tax rate will throttle the burn rate until the supply reaches its target.
 

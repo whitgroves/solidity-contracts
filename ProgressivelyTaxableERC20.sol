@@ -11,7 +11,7 @@ abstract contract ProgressivelyTaxableERC20 is TaxableERC20 {
     
     event TaxBracketChanged(uint bracket, uint8 taxRate);
 
-    constructor(address initialOwner, uint8 maxTaxRate_) TaxableERC20(initialOwner, maxTaxRate_) {
+    constructor(address initialOwner) TaxableERC20(initialOwner) {
         // initialize arrays so setTaxRate works properly; otherwise, loop is skipped and no rates can be added
         _brackets.push(0);
         _taxRates.push(0);
