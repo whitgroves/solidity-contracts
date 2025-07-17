@@ -19,6 +19,21 @@ abstract contract ManagedSupplyERC20 is TaxableERC20 {
         setTargetSupply(targetSupply_);
     }
 
+    // Wrapper for setTargetSupplyUpdateBuffer() to set update buffer on a daily timescale.
+    function setTargetSupplyUpdateDays(uint bufferDays_) external virtual {
+        setTargetSupplyUpdateBuffer(bufferDays_ * 1 days);
+    }
+
+    // Wrapper for setTargetSupplyUpdateBuffer() to set update buffer on an hourly timescale.
+    function setTargetSupplyUpdateHours(uint bufferHours_) external virtual {
+        setTargetSupplyUpdateBuffer(bufferHours_ * 1 hours);
+    }
+
+    // Wrapper for setTargetSupplyUpdateBuffer() to set update buffer on a minute timescale.
+    function setTargetSupplyUpdateMinutes(uint bufferMinutes_) external virtual {
+        setTargetSupplyUpdateBuffer(bufferMinutes_ * 1 minutes);
+    }
+
     // Sets an optional buffer to prevent updates to the target supply for `targetSupplyUpdateBuffer_` seconds.
     // Note that setting the buffer > 0 makes `setTargetSupply()` delegated instead of onlyOwner.
     function setTargetSupplyUpdateBuffer(uint targetSupplyUpdateBuffer_) public virtual onlyOwner {
@@ -31,7 +46,7 @@ abstract contract ManagedSupplyERC20 is TaxableERC20 {
         require(targetSupply_ > 0, "The target supply must be at least 1.");
         if (_targetSupplyUpdateBuffer > 0) {
             _checkDelegate();
-            if (block.timestamp < (_lastTargetSupplyUpdate + _targetSupplyUpdateBuffer)) 
+            if (block.timestamp < (lastTargetSupplyUpdate() + targetSupplyUpdateBuffer())) 
                 revert("Target supply updates are buffered. Reduce buffer or wait until buffer time is reached.");
         }
         else _checkOwner();
@@ -42,6 +57,14 @@ abstract contract ManagedSupplyERC20 is TaxableERC20 {
 
     function targetSupply() public virtual view returns (uint256) {
         return _targetSupply;
+    }
+
+    function lastTargetSupplyUpdate() public virtual view returns (uint) {
+        return _lastTargetSupplyUpdate;
+    }
+
+    function targetSupplyUpdateBuffer() public virtual view returns (uint) {
+        return _targetSupplyUpdateBuffer;
     }
 
     function burnRate() public virtual view returns (uint) {
