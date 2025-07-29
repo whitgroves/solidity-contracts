@@ -5,6 +5,7 @@ import {PaymentSplitter} from "./PaymentSplitter.sol";
 import {AccessControlledERC721} from "./AccessControlledERC721.sol";
 
 // Imported code license: MIT
+import {IERC20} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
 import {IERC721} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/IERC721.sol";
 
 // An extension of AccessControlledERC721 that implements the functionality of ProfitSplitter.sol
@@ -41,7 +42,7 @@ abstract contract PaymentSplitterERC721 is AccessControlledERC721 {
     }
 
     function reallocate(address currency) public virtual whenNotPaused onlyDelegate returns (uint) {
-        uint unallocated_ = _unallocatedFunds(currency);
+        uint unallocated_ = unallocatedFunds(currency);
         if (unallocated_ == 0) revert("No unallocated funds in selected currency.");
         uint totalPayout_ = 0;
         for (uint i = 0; i < _payees.length; i++) {
@@ -64,10 +65,6 @@ abstract contract PaymentSplitterERC721 is AccessControlledERC721 {
 
     function payscaleOf(address payee) public virtual view returns (uint) {
         return _balanceOf(payee);
-    }
-
-    function totalAllocated(address currency) public virtual view nonZeroAddress(currency) returns (uint) {
-        return _totalAllocated[currency];
     }
 
     function totalPayscale() public virtual view returns (uint) {
@@ -108,11 +105,7 @@ abstract contract PaymentSplitterERC721 is AccessControlledERC721 {
     // The owner of the entire contract is treated like an authorized party 
     function _requireAuthorized(uint tokenId, bool ownerOnly) internal override returns (address) {
         if (!ownerOnly && _msgSender() == owner()) return _ownerOf(tokenId);
-        super._requireAuthorized(tokenId, ownerOnly);
+        return super._requireAuthorized(tokenId, ownerOnly);
     }
-
-    // function membershipToken() public virtual view returns (address) {
-    //     return _membershipToken;
-    // }
     
 }

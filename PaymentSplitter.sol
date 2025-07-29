@@ -62,7 +62,7 @@ abstract contract PaymentSplitter is AccessControlled {
         uint totalPayout_ = 0;
         for (uint i = 0; i < _payees.length; i++) {
             address payee_ = _payees[i];
-            uint payscale_ = _payscale[payee_];
+            uint payscale_ = payscaleOf(payee_);
             if (payscale_ == 0) continue;
             uint scale_ = ((payscale_ * 1e18) / totalPayscale());
             uint payout_ = (unallocated_ * scale_) / 1e18;
@@ -78,7 +78,7 @@ abstract contract PaymentSplitter is AccessControlled {
         return _enrolled[payee];
     }
 
-    function payscaleOf(address payee) public virtual view onlyDelegate returns (uint) {
+    function payscaleOf(address payee) public virtual view returns (uint) {
         return _payscale[payee];
     }
 

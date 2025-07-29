@@ -314,6 +314,9 @@ The owner of any NFT in the collection can call `setPrice()` or `setTrade()` to 
 
 Once exchanged, the token will be automatically taken off of the market to allow the new owner to update any price(s) before making it tradeable again.
 
+### PaymentSplitterERC721
+An extension of `AccessControlledERC721` that implements `PaymentSplitter` functions using ERC721 token ownersihp in lieu of a centralized payroll. Payments are allocated to NFT owners at time of reallocation, so even if they transfer or burn an NFT, their previously allocated funds are available to withdraw.
+
 ## Other
 
 ### IERC20orERC721

@@ -51,7 +51,7 @@ abstract contract AccessControlledERC721 is IERC165, IERC721, AccessControlled {
     }
 
     function getApproved(uint256 tokenId) external virtual view returns (address) {
-        _requireNonZeroAddress(_owners[tokenId]);
+        _requireNonZeroAddress(_ownerOf(tokenId));
         return _approvals[tokenId];
     }
 
@@ -83,7 +83,7 @@ abstract contract AccessControlledERC721 is IERC165, IERC721, AccessControlled {
     function burn(uint tokenId) public virtual {
         _update(_requireOwnership(tokenId), address(0), tokenId);
     }
-
+    
     // internal 
 
     function _safeTransfer(address from, address to, uint256 tokenId, bytes memory data) internal virtual {
@@ -93,8 +93,7 @@ abstract contract AccessControlledERC721 is IERC165, IERC721, AccessControlled {
     }
 
     function _transfer(address from, address to, uint256 tokenId) internal virtual nonZeroAddress(to) {
-        if (from != _requireApproved(tokenId)) revert ERC721UnauthorizedAccess(tokenId);
-        _update(from, to, tokenId);
+        _update(_requireApproved(tokenId), to, tokenId);
     }
 
     function _update(address from, address to, uint256 tokenId) internal virtual whenNotPaused onlyAllowed {
@@ -115,7 +114,7 @@ abstract contract AccessControlledERC721 is IERC165, IERC721, AccessControlled {
 
     function _requireAuthorized(uint tokenId, bool ownerOnly) internal virtual returns (address) {
         address sender = _msgSender();
-        address owner = _requireNonZeroAddress(_owners[tokenId]);
+        address owner = _requireNonZeroAddress(_ownerOf(tokenId));
         if (owner == sender) return owner;
         if (ownerOnly) revert ERC721UnauthorizedAccess(tokenId);
         if ((sender != _approvals[tokenId]) && (_operators[owner][sender] == false)) 
@@ -126,5 +125,9 @@ abstract contract AccessControlledERC721 is IERC165, IERC721, AccessControlled {
     // added for extensibility of ownership while maintaining IERC721 interface
     function _ownerOf(uint256 tokenId) internal virtual view returns (address) {
         return _owners[tokenId];
+    }
+
+    function _balanceOf(address owner) internal virtual view returns (uint256) {
+        return _balances[owner];
     }
 }
