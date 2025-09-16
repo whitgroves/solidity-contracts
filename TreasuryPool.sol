@@ -2,11 +2,8 @@
 pragma solidity ^0.8.20;
 
 import {DemocraticallyOwned} from "./DemocraticallyOwned.sol";
-
-// Imported code license: MIT
-import {IERC20} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
-import {IERC721} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/IERC721.sol";
-import {IERC721Receiver} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/IERC721Receiver.sol";
+import {IERC20} from "./interfaces/IERC20.sol";
+import {IERC721, IERC721Receiver} from "./interfaces/IERC721.sol";
 
 /* 
  * A smart contract that pools ERC20 and ERC721 tokens and authorizes them to be managed or spent by proxy.

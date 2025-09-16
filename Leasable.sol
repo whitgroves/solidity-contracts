@@ -2,9 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {AccessControlled} from "./AccessControlled.sol";
-
-// Imported code license: MIT
-import {IERC20} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "./interfaces/IERC20.sol";
 
 /* 
  * An extension of AccessControlled that allows ownership access to be leased out on a daily basis

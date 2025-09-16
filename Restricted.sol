@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSE
 pragma solidity ^0.8.20;
 
-import {InputValidated} from "https://github.com/whitgroves/solidity-contracts/blob/main/InputValidated.sol";
+import {InputValidated} from "./InputValidated.sol";
 
 // Imported code license: MIT
 import {Ownable} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol";

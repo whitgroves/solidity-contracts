@@ -2,9 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {AccessControlledERC721} from "./AccessControlledERC721.sol";
-
-// Imported code license: MIT
-import {IERC20} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "./interfaces/IERC20.sol";
 
 /* 
  * An extension of ERC721 which allows for the leasing of NFTs on a daily basis in exchange for ERC20 tokens.

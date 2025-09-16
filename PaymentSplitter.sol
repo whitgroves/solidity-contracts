@@ -2,9 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {AccessControlled} from "./AccessControlled.sol";
-
-// Imported code license: MIT
-import {IERC20} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
+import {IERC20} from "./interfaces/IERC20.sol";
 
 // A contract that can hold and redistribute ERC20 tokens to enrolled addresses according to a preset payscale.
 abstract contract PaymentSplitter is AccessControlled {

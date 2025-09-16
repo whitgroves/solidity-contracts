@@ -2,11 +2,8 @@
 pragma solidity ^0.8.20;
 
 import {AccessControlled} from "./AccessControlled.sol";
-
-// Imported code license: MIT
-import {IERC165} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/introspection/IERC165.sol";
-import {IERC721} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/IERC721.sol";
-import {IERC721Receiver} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC721/IERC721Receiver.sol";
+import {IERC165} from "./interfaces/IERC165.sol";
+import {IERC721, IERC721Receiver} from "./interfaces/IERC721.sol";
 
 abstract contract AccessControlledERC721 is IERC165, IERC721, AccessControlled {
 
