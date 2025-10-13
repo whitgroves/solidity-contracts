@@ -2,16 +2,16 @@
 pragma solidity ^0.8.20;
 
 import {InputValidated} from "./InputValidated.sol";
+import {ERC173} from "./ERC173.sol";
 
 // Imported code license: MIT
-import {Ownable} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol";
 import {Pausable} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/Pausable.sol";
 
 /* 
  * An extension of Ownable and Pausable that implements both Delegated and Restricted permissions to allow inheritance
  * from all four without overriding their shared methods.
  */
-abstract contract AccessControlled is Ownable, Pausable, InputValidated {
+abstract contract AccessControlled is ERC173, Pausable, InputValidated {
 
     address[] private _delegates; // non-unique list of delegates so they can be cleared on ownership transfer
     mapping(address => bool) private _isDelegate;
@@ -36,9 +36,9 @@ abstract contract AccessControlled is Ownable, Pausable, InputValidated {
     }
 
     // @dev By default, the message sender is added as a delegate on construction.
-    //      If this isn't desired, call renounceDelegation(_msgSender()) in the subclass constructor.
-    constructor(address initialOwner) Ownable(initialOwner) {
-        addDelegate(_requireNonZeroAddress(_msgSender()));
+    //      If this isn't desired, call renounceDelegation(msg.sender) in the subclass constructor.
+    constructor(address initialOwner) ERC173(initialOwner) {
+        addDelegate(_requireNonZeroAddress(msg.sender));
     }
 
     function banAccount(address account) external virtual nonZeroAddress(account) onlyDelegate {
@@ -54,7 +54,7 @@ abstract contract AccessControlled is Ownable, Pausable, InputValidated {
     }
 
     function renounceDelegation() external virtual onlyDelegate {
-        _removeDelegate(_msgSender());
+        _removeDelegate(msg.sender);
     }
 
     // Public wrapper for _removeDelegate() to restrict ad-hoc removal to the current owner
@@ -90,12 +90,12 @@ abstract contract AccessControlled is Ownable, Pausable, InputValidated {
 
     // Override to redefine how the onlyDelegate modifier works in your subclass.
     function _checkDelegate() internal virtual view {
-        if (!isDelegate(_msgSender())) revert UnauthorizedAccessRequest(_msgSender());
+        if (!isDelegate(msg.sender)) revert UnauthorizedAccessRequest(msg.sender);
     }
 
     // Override to redefine how the onlyAllowed modifier works in your subclass.
     function _checkAllowed() internal virtual view {
-        if (isBanned(_msgSender())) revert UnauthorizedAccessRequest(_msgSender());
+        if (isBanned(msg.sender)) revert UnauthorizedAccessRequest(msg.sender);
     }
 
     // Internal function to allow delegates to be removed programmatically without checking for ownership first

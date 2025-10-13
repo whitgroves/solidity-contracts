@@ -2,14 +2,12 @@
 pragma solidity ^0.8.20;
 
 import {InputValidated} from "./InputValidated.sol";
-
-// Imported code license: MIT
-import {Ownable} from "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol";
+import {ERC173} from "./ERC173.sol";
 
 /* 
  * An extension of OpenZeppelin's Ownable contract that manages access by enforcing an account banlist via a modifier.
  */
-abstract contract Restricted is Ownable, InputValidated {
+abstract contract Restricted is ERC173, InputValidated {
 
     mapping(address => bool isBanned) private _banlist;
 
@@ -21,7 +19,7 @@ abstract contract Restricted is Ownable, InputValidated {
         _;
     }
     
-    constructor(address initialOwner) Ownable(initialOwner) {}
+    constructor(address initialOwner) ERC173(initialOwner) {}
 
     function banAccount(address account) public virtual nonZeroAddress(account) onlyOwner {
         if (account == owner()) revert("The owner cannot be banned.");
@@ -40,6 +38,6 @@ abstract contract Restricted is Ownable, InputValidated {
 
     // Override to redefine how the onlyAllowed modifier works in your subclass.
     function _checkAllowed() internal virtual view {
-        if (isBanned(_msgSender())) revert UnauthorizedAccessRequest(_msgSender());
+        if (isBanned(msg.sender)) revert UnauthorizedAccessRequest(msg.sender);
     }
 }
