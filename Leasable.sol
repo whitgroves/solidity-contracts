@@ -83,6 +83,11 @@ abstract contract Leasable is AccessControlled {
 
     function maxLeaseDays() public virtual view returns (uint) { return _maxLeaseDays; }
     
+    // Override to prevent ownership transfer or renouncement during an active lease.
+    function transferOwnership(address newOwner) public override notWhileLeased {
+        super.transferOwnership(newOwner);
+    }
+
     function _lease(address tenant_, address currency, uint leaseDays) internal virtual
         whenNotPaused notWhileLeased nonZeroAddress(tenant_) 
     {
@@ -112,9 +117,5 @@ abstract contract Leasable is AccessControlled {
         if (!isLeased()) super._checkOwner();
         else if (tenant() != _msgSender()) revert UnauthorizedAccessRequest(_msgSender());
     }
-
-    // Override to prevent ownership transfer or renouncement during an active lease.
-    function _transferOwnership(address newOwner) internal override notWhileLeased {
-        super._transferOwnership(newOwner);
-    }
+    
 }

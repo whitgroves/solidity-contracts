@@ -85,7 +85,7 @@ abstract contract TradeableERC721 is AccessControlledERC721 {
         uint[] tradesInCollection_ = _trades[tradeableTokenId][collection];
         for (uint i = 0; i < tradesInCollection_.length; i++) {
             if (tradesInCollection_[i] == offeredTokenId) {
-                address owner = ownerOf(tradeableTokenId);
+                address owner = _ownerOf(tradeableTokenId);
                 collection_.transferFrom(_msgSender(), owner, offeredTokenId);
                 _update(owner, _msgSender(), tradeableTokenId);
                 emit ERC721TokenTraded(collection, offeredTokenId, tradeableTokenId);

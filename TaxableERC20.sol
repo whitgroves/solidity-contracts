@@ -62,7 +62,7 @@ abstract contract TaxableERC20 is AccessControlledERC20 {
         return _taxCap;
     }
 
-    function maxTaxRate() public view returns (uint8) {
+    function maxTaxRate() public pure returns (uint8) {
         return MAX_TAX_RATE;
     }
 
