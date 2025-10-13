@@ -31,21 +31,21 @@ abstract contract StakingPool is AccessControlled {
 
     // Allows the sender to transfer tokens into this contract until they choose to unstake them.
     function stake(uint amount) external virtual whenNotPaused onlyAllowed {
-        if (!token().transferFrom(_msgSender(), address(this), amount))
+        if (!token().transferFrom(msg.sender, address(this), amount))
             revert("Review sender balance and approvals.");
-        if (_everStaked[_msgSender()] == false) {
-            _everStaked[_msgSender()] = true;
-            _stakeholders.push(_msgSender());
+        if (_everStaked[msg.sender] == false) {
+            _everStaked[msg.sender] = true;
+            _stakeholders.push(msg.sender);
         }
-        _stake[_msgSender()] += amount;
+        _stake[msg.sender] += amount;
         _totalStaked += amount;
     }
     
     // Allows the sender to unstake a specified amount, assuming it is less than their allocated stake size.
     function unstake(uint amount) external virtual {
         if (amount > stakeSize()) revert("Amount exceeds stake size.");
-        if (!token().transfer(_msgSender(), amount)) revert("Unstaking transaction failed.");
-        _stake[_msgSender()] -= amount;
+        if (!token().transfer(msg.sender, amount)) revert("Unstaking transaction failed.");
+        _stake[msg.sender] -= amount;
         _totalStaked -= amount;
     }
 
@@ -53,14 +53,14 @@ abstract contract StakingPool is AccessControlled {
     function withdrawDistributions() external virtual {
         uint distributions_ = distributions();
         if (distributions_ == 0) revert("No unstaked distributions to withdraw.");
-        if (!token().transfer(_msgSender(), distributions_)) revert("Distribution withdrawal failed.");
-        _distributions[_msgSender()] = 0;
+        if (!token().transfer(msg.sender, distributions_)) revert("Distribution withdrawal failed.");
+        _distributions[msg.sender] = 0;
         _totalDistributions -= distributions_;
     }
 
     // Allows the sender to set their account to automatically stake distributions as they are allocated to them.
     function setAutoStake(bool autoStake_) public virtual {
-        _autoStake[_msgSender()] = autoStake_;
+        _autoStake[msg.sender] = autoStake_;
     }
 
     // Distributes unallocated tokens stored at this address to stakeholders, proportional to stake size, and returns
@@ -112,11 +112,11 @@ abstract contract StakingPool is AccessControlled {
     }
 
     function stakeSize() public virtual view returns (uint) {
-        return _stake[_msgSender()];
+        return _stake[msg.sender];
     }
 
     function distributions() public virtual view returns (uint) {
-        return _distributions[_msgSender()];
+        return _distributions[msg.sender];
     }
 
     function retired() public virtual view returns (bool) { return _retired; }

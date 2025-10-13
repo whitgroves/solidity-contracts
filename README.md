@@ -153,7 +153,7 @@ contract MyToken is AccessControlledERC20 {
 
     function mint(address to, uint amount) external onlyDelegate { _mint(to,amount); }
 
-    function burn(uint amount) external { _burn(_msgSender(), amount); }
+    function burn(uint amount) external { _burn(msg.sender, amount); }
 
     function _transfer(address _from, address _to, uint256 _value) internal override onlyAllowed returns (bool success) {
         ... // custom pre-transfer logic
@@ -330,7 +330,7 @@ To use, deploy the contract as such:
 import {StakingPool} from "https://github.com/whitgroves/solidity-contracts/blob/main/StakingPool.sol";
 
 contract TestPool is StakingPool {
-    constructor(address tokenAddress_) StakingPool(tokenAddress_, _msgSender()) {}
+    constructor(address tokenAddress_) StakingPool(tokenAddress_, msg.sender) {}
 }
 ```
 Then transfer and distribute funds and call `distribute()` as needed. Secondary users or smart contracts can be added as delegates to offload the distribution process as well.
@@ -347,7 +347,7 @@ import {TreasuryPool} from "https://github.com/whitgroves/solidity-contracts/blo
 import {IERC20orERC721} from "https://github.com/whitgroves/solidity-contracts/blob/main/IERC20orERC721.sol";
 
 contract TestPool is TreasuryPool {
-    constructor(address <your token>) TreasuryPool(<your token>, _msgSender()) {}
+    constructor(address <your token>) TreasuryPool(<your token>, msg.sender) {}
 
     // Override to scale voting power with underlying token ownership.
     function votingPower(address voter) public override view returns (uint) {
@@ -366,6 +366,6 @@ The contract is ready-to-use without any modifications:
 import {PaymentSplitter} from "https://github.com/whitgroves/solidity-contracts/blob/main/PaymentSplitter.sol";
 
 contract MyPayroll is PaymentSplitter {
-    constructor() PaymentSplitter(_msgSender()) {}
+    constructor() PaymentSplitter(msg.sender) {}
 }
 ```

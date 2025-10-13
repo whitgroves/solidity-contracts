@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: UNLICENSE
 pragma solidity ^0.8.20;
 
+import {IERC165} from "./IERC165.sol";
+
 // A standard interface for non-fungible tokens.
 // ERC165 identifier: 0x80ac58cd
 // See: https://eips.ethereum.org/EIPS/eip-721
-interface IERC721 {
+interface IERC721 is IERC165 {
     event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
     event Approval(address indexed _owner, address indexed _approved, uint256 indexed _tokenId);
     event ApprovalForAll(address indexed _owner, address indexed _operator, bool _approved);

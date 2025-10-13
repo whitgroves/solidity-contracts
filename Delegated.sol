@@ -22,7 +22,7 @@ abstract contract Delegated is ERC173, InputValidated {
     }
 
     // @dev By default, the message sender is added as a delegate on construction.
-    //      If this isn't desired, call renounceDelegation(_msgSender()) in the subclass constructor.
+    //      If this isn't desired, call renounceDelegation(msg.sender) in the subclass constructor.
     constructor(address initialOwner) ERC173(initialOwner) {
         if (msg.sender != initialOwner) addDelegate(msg.sender);
     }

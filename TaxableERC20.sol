@@ -44,7 +44,7 @@ abstract contract TaxableERC20 is AccessControlledERC20 {
     }
 
     function setTaxExempt(address account, bool isExempt) public virtual onlyDelegate {
-        if (_msgSender() == account && account != owner()) revert("Delegates cannot make themselves tax exempt.");
+        if (msg.sender == account && account != owner()) revert("Delegates cannot make themselves tax exempt.");
         _isTaxExempt[account] = isExempt;
         if (isExempt) emit TaxExemptionGranted(account);
         else emit TaxExemptionRemoved(account);
@@ -72,16 +72,16 @@ abstract contract TaxableERC20 is AccessControlledERC20 {
 
     // Override of ERC20.transfer() to collect the transaction tax. Done here instead of _transfer() to avoid recursion.
     function transfer(address _to, uint256 _value) public virtual override nonZeroAddress(_to) returns (bool success) {
-        return _processTransfer(_msgSender(), _to, _value);
+        return _processTransfer(msg.sender, _to, _value);
     }
 
     // Override of ERC20.transferFrom() to collect the transaction tax. Done here instead of _transfer() to avoid recursion.
     function transferFrom(address _from, address _to, uint256 _value) public virtual override nonZeroAddress(_to) 
         returns (bool success) 
     {
-        if (_from != _msgSender() && (allowance(_from, _msgSender()) < _value)) 
-            revert ERC20InsufficientAllowance(_from, _msgSender());
-        _allowances[_from][_msgSender()] -= _value;
+        if (_from != msg.sender && (allowance(_from, msg.sender) < _value)) 
+            revert ERC20InsufficientAllowance(_from, msg.sender);
+        _allowances[_from][msg.sender] -= _value;
         return _processTransfer(_from, _to, _value);
     }
 

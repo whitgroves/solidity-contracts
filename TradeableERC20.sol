@@ -21,21 +21,21 @@ abstract contract TradeableERC20 is AccessControlledERC20 {
     }
 
     function buy(address seller, address currency, uint amount) external virtual returns (bool) {
-        _trade(_msgSender(), seller, currency, getSellOffer(seller, currency), amount);
+        _trade(msg.sender, seller, currency, getSellOffer(seller, currency), amount);
         return true;
     }
 
     function sell(address buyer, address currency, uint amount) external virtual returns (bool) {
-        _trade(buyer, _msgSender(), currency, getBuyOffer(buyer, currency), amount);
+        _trade(buyer, msg.sender, currency, getBuyOffer(buyer, currency), amount);
         return true;
     }
 
     function makeBuyOffer(address currency, uint price) public virtual nonZeroAddress(currency) {
-        _buyOffers[_msgSender()][currency] = price;
+        _buyOffers[msg.sender][currency] = price;
     }
 
     function makeSellOffer(address currency, uint price) public virtual nonZeroAddress(currency) {
-        _sellOffers[_msgSender()][currency] = price;
+        _sellOffers[msg.sender][currency] = price;
     }
 
     function getBuyOffer(address buyer, address currency) public virtual view

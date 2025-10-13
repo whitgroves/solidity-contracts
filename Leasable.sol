@@ -24,7 +24,7 @@ abstract contract Leasable is AccessControlled {
     event LeaseRevoked(address tenant, address owner);
     
     modifier onlyOriginalOwner() virtual {
-        if (owner() != _msgSender()) revert UnauthorizedAccessRequest(_msgSender());
+        if (owner() != msg.sender) revert UnauthorizedAccessRequest(msg.sender);
         _;
     }
 
@@ -54,7 +54,7 @@ abstract contract Leasable is AccessControlled {
     }
 
     function startLease(address currency, uint leaseDays) external virtual {
-        _lease(_msgSender(), currency, leaseDays);
+        _lease(msg.sender, currency, leaseDays);
     }
 
     function startLeaseFor(address tenant_, address currency, uint leaseDays) external virtual {
@@ -115,7 +115,7 @@ abstract contract Leasable is AccessControlled {
     // While leased, tenant is treated as the owner for onlyOwner checks.
     function _checkOwner() internal override view {
         if (!isLeased()) super._checkOwner();
-        else if (tenant() != _msgSender()) revert UnauthorizedAccessRequest(_msgSender());
+        else if (tenant() != msg.sender) revert UnauthorizedAccessRequest(msg.sender);
     }
     
 }

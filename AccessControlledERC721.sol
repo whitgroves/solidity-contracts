@@ -53,7 +53,7 @@ abstract contract AccessControlledERC721 is IERC165, IERC721, AccessControlled {
     }
 
     function setApprovalForAll(address operator, bool _approved) external virtual {
-        address owner = _msgSender();
+        address owner = msg.sender;
         _operators[owner][operator] = _approved;
         emit ApprovalForAll(owner, operator, _approved);
     }
@@ -85,7 +85,7 @@ abstract contract AccessControlledERC721 is IERC165, IERC721, AccessControlled {
 
     function _safeTransfer(address from, address to, uint256 tokenId, bytes memory data) internal virtual {
         _transfer(from, to, tokenId);
-        if (IERC721Receiver(to).onERC721Received(_msgSender(), from, tokenId, data) != RECEIVER_HANDSHAKE)
+        if (IERC721Receiver(to).onERC721Received(msg.sender, from, tokenId, data) != RECEIVER_HANDSHAKE)
             revert ERC721InvalidRecipient(tokenId);
     }
 
@@ -110,7 +110,7 @@ abstract contract AccessControlledERC721 is IERC165, IERC721, AccessControlled {
     }
 
     function _requireAuthorized(uint tokenId, bool ownerOnly) internal virtual returns (address) {
-        address sender = _msgSender();
+        address sender = msg.sender;
         address owner = _requireNonZeroAddress(_ownerOf(tokenId));
         if (owner == sender) return owner;
         if (ownerOnly) revert ERC721UnauthorizedAccess(tokenId);

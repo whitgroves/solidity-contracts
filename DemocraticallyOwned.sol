@@ -72,15 +72,15 @@ abstract contract DemocraticallyOwned is AccessControlled {
     }
 
     function vote(address candidate) external virtual duringElection onlyAllowed {
-        if (hasVoted(_msgSender())) revert("Voter has already voted this election.");
+        if (hasVoted(msg.sender)) revert("Voter has already voted this election.");
         if (!isCandidate(candidate)) revert("Selected address is not a nomiated candidate.");
         if (!canParticipate(candidate)) revert InvalidParticipant(candidate);
-        _lastVote[_msgSender()] = block.timestamp;
-        _votes[candidate] += votingPower(_msgSender());
+        _lastVote[msg.sender] = block.timestamp;
+        _votes[candidate] += votingPower(msg.sender);
     }
 
     function nominate(address candidate) public virtual nonZeroAddress(candidate) duringNomination onlyAllowed {
-        if (_msgSender() == candidate) revert("Candidates cannot nominate themselves.");
+        if (msg.sender == candidate) revert("Candidates cannot nominate themselves.");
         if (!canParticipate(candidate)) revert InvalidParticipant(candidate);
         if (isCandidate(candidate)) revert("Candidate has already been nominated.");
         _candidates.push(candidate);
@@ -204,13 +204,13 @@ abstract contract DemocraticallyOwned is AccessControlled {
 
     // Override to add ownership of related token as an access requirement.
     function _checkDelegate() internal override view {
-        if (!canParticipate(_msgSender())) revert InvalidParticipant(_msgSender());
+        if (!canParticipate(msg.sender)) revert InvalidParticipant(msg.sender);
         super._checkDelegate();
     }
 
     // Override to add ownership of related token as an access requirement.
     function _checkAllowed() internal override view {
-        if (!canParticipate(_msgSender())) revert InvalidParticipant(_msgSender());
+        if (!canParticipate(msg.sender)) revert InvalidParticipant(msg.sender);
         super._checkAllowed();
     }
 }

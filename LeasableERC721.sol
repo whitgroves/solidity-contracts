@@ -43,7 +43,7 @@ abstract contract LeasableERC721 is AccessControlledERC721 {
     }
 
     function startLease(address currency, uint leaseDays, uint tokenId) external virtual {
-        _lease(_msgSender(), currency, leaseDays, tokenId);
+        _lease(msg.sender, currency, leaseDays, tokenId);
     }
 
     function startLeaseFor(address tenant_, address currency, uint leaseDays, uint tokenId) external virtual {
@@ -116,7 +116,7 @@ abstract contract LeasableERC721 is AccessControlledERC721 {
 
     function _requireOriginalOwnership(uint tokenId) internal virtual returns (address) {
         address owner = _requireNonZeroAddress(_ownerOf(tokenId));
-        if (_msgSender() != owner) revert ERC721UnauthorizedAccess(tokenId);
+        if (msg.sender != owner) revert ERC721UnauthorizedAccess(tokenId);
         return owner;
     }
 

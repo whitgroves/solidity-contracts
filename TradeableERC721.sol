@@ -57,9 +57,9 @@ abstract contract TradeableERC721 is AccessControlledERC721 {
             if (tradesInCollection_[i] == undesiredTokenId) indexFound = true;
             if (indexFound) tradesInCollection_[i] = tradesInCollection_[i+1];
         }
-        if (tradesInCollection_.pop() != undesiredTokenId && !indexFound) 
+        if (tradesInCollection_[tradesInCollection_.length - 1] != undesiredTokenId && !indexFound) 
             revert("Undesired token ID was not listed for trade.");
-        _trades[ownedTokenId][collection] = tradesInCollection_;
+        _trades[ownedTokenId][collection].pop();
     }
 
     // Allows the sender to purchase a tradeable NFT in exchange for a specified currency. Returns true on success.
@@ -69,9 +69,9 @@ abstract contract TradeableERC721 is AccessControlledERC721 {
         if (price == 0) revert("Trade rejected. Owner has not set a price in the specified currency.");
         address owner = _ownerOf(tokenId);
         IERC20 token_ = IERC20(currency);
-        if (!token_.transferFrom(_msgSender(), address(this), price) || !token_.transfer(owner, price)) 
+        if (!token_.transferFrom(msg.sender, address(this), price) || !token_.transfer(owner, price)) 
             revert("Trade rejected. Review sender balance and approvals.");
-        _update(owner, _msgSender(), tokenId);
+        _update(owner, msg.sender, tokenId);
         emit ERC721TokenSold(currency, price, tokenId);
         return true;
     }
@@ -81,13 +81,13 @@ abstract contract TradeableERC721 is AccessControlledERC721 {
         if (!canTrade(tradeableTokenId)) revert("Trade rejected. Token has not been approved for exchange.");
         IERC721 collection_ = IERC721(collection);
         if (!collection_.supportsInterface(type(IERC721).interfaceId)) revert("Provided collection is not supported.");
-        if (!collection_.ownerOf(offeredTokenId) != _msgSender()) revert("Sender is not owner of the offered token.");
+        if (collection_.ownerOf(offeredTokenId) != msg.sender) revert("Sender is not owner of the offered token.");
         uint[] memory tradesInCollection_ = _trades[tradeableTokenId][collection];
         for (uint i = 0; i < tradesInCollection_.length; i++) {
             if (tradesInCollection_[i] == offeredTokenId) {
                 address owner = _ownerOf(tradeableTokenId);
-                collection_.transferFrom(_msgSender(), owner, offeredTokenId);
-                _update(owner, _msgSender(), tradeableTokenId);
+                collection_.transferFrom(msg.sender, owner, offeredTokenId);
+                _update(owner, msg.sender, tradeableTokenId);
                 emit ERC721TokenTraded(collection, offeredTokenId, tradeableTokenId);
                 return true;
             }
@@ -113,7 +113,7 @@ abstract contract TradeableERC721 is AccessControlledERC721 {
 
     // Returns whether an NFT from this collection can be traded for the offered one in the specified collection.
     function isTradeFor(address collection, uint offeredTokenId, uint desiredTokenId) public virtual view returns (bool) {
-        uint[] tradesInCollection_ = _trades[desiredTokenId][collection];
+        uint[] memory tradesInCollection_ = _trades[desiredTokenId][collection];
         for (uint i = 0; i < tradesInCollection_.length; i++) {
             if (tradesInCollection_[i] == offeredTokenId) return true;
         }

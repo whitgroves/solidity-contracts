@@ -32,10 +32,10 @@ abstract contract PaymentSplitter is AccessControlled {
     }
 
     function withdraw(address currency) external virtual nonZeroAddress(currency) returns (uint) {
-        uint withdrawal_ = pendingWithdrawals(_msgSender(), currency);
+        uint withdrawal_ = pendingWithdrawals(msg.sender, currency);
         if (withdrawal_ == 0) revert("No pending withdrawals in selected currency.");
-        if (!IERC20(currency).transfer(_msgSender(), withdrawal_)) revert("Funds transfer failed.");
-        _pendingWithdrawals[_msgSender()][currency] = 0;
+        if (!IERC20(currency).transfer(msg.sender, withdrawal_)) revert("Funds transfer failed.");
+        _pendingWithdrawals[msg.sender][currency] = 0;
         _totalAllocated[currency] -= withdrawal_;
         return withdrawal_;
     }

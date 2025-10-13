@@ -84,7 +84,7 @@ abstract contract ManagedSupplyERC20 is TaxableERC20 {
 
     // Wrapper for ERC20._burn() so tokens can be burned from their owners' (and only their owners') account.
     function burn(uint256 value) public virtual {
-        _burn(_msgSender(), value);
+        _burn(msg.sender, value);
     }
 
     // Takes a payment value, deducts and transfers a % of it as tax and/or burn, and then returns the remainder.

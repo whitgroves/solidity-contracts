@@ -24,10 +24,10 @@ abstract contract PaymentSplitterERC721 is AccessControlledERC721 {
     // ProfitSplitter functions
 
     function withdraw(address currency) external virtual nonZeroAddress(currency) returns (uint) {
-        uint withdrawal_ = pendingWithdrawals(_msgSender(), currency);
+        uint withdrawal_ = pendingWithdrawals(msg.sender, currency);
         if (withdrawal_ == 0) revert("No pending withdrawals in selected currency.");
-        if (!IERC20(currency).transfer(_msgSender(), withdrawal_)) revert("Funds transfer failed.");
-        _pendingWithdrawals[_msgSender()][currency] = 0;
+        if (!IERC20(currency).transfer(msg.sender, withdrawal_)) revert("Funds transfer failed.");
+        _pendingWithdrawals[msg.sender][currency] = 0;
         _totalAllocated[currency] -= withdrawal_;
         return withdrawal_;
     }
@@ -102,7 +102,7 @@ abstract contract PaymentSplitterERC721 is AccessControlledERC721 {
 
     // The owner of the entire contract is treated like an authorized party 
     function _requireAuthorized(uint tokenId, bool ownerOnly) internal override returns (address) {
-        if (!ownerOnly && _msgSender() == owner()) return _ownerOf(tokenId);
+        if (!ownerOnly && msg.sender == owner()) return _ownerOf(tokenId);
         return super._requireAuthorized(tokenId, ownerOnly);
     }
     

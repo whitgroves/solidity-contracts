@@ -20,9 +20,9 @@ abstract contract MajorityOwned is AccessControlled {
     // Note that if the balances are exactly the same, ownership will NOT transfer.
     function claimOwnership() external virtual onlyAllowed whenNotPaused returns (bool) {
         IERC20orERC721 ownershipToken_ = IERC20orERC721(ownershipToken());
-        if (ownershipToken_.balanceOf(_msgSender()) > ownershipToken_.balanceOf(owner())) {
+        if (ownershipToken_.balanceOf(msg.sender) > ownershipToken_.balanceOf(owner())) {
             _clearDelegates();
-            transferOwnership(_msgSender());
+            transferOwnership(msg.sender);
             return true;
         }
         return false;

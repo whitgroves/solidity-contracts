@@ -27,19 +27,19 @@ abstract contract AccessControlledERC20 is AccessControlled, IERC20, IERC165 {
     }
 
     function transfer(address _to, uint256 _value) public virtual nonZeroAddress(_to) returns (bool success) {
-        return _transfer(_msgSender(), _to, _value);
+        return _transfer(msg.sender, _to, _value);
     }
 
     function transferFrom(address _from, address _to, uint256 _value) public virtual nonZeroAddress(_to) returns (bool success) {
-        if (_from != _msgSender() && (allowance(_from, _msgSender()) < _value)) 
-            revert ERC20InsufficientAllowance(_from, _msgSender());
-        _allowances[_from][_msgSender()] -= _value;
+        if (_from != msg.sender && (allowance(_from, msg.sender) < _value)) 
+            revert ERC20InsufficientAllowance(_from, msg.sender);
+        _allowances[_from][msg.sender] -= _value;
         return _transfer(_from, _to, _value);
     }
 
     function approve(address _spender, uint256 _value) public virtual nonZeroAddress(_spender) returns (bool success) {
-        _allowances[_msgSender()][_spender] = _value;
-        emit Approval(_msgSender(), _spender, _value);
+        _allowances[msg.sender][_spender] = _value;
+        emit Approval(msg.sender, _spender, _value);
         return true;
     }
 
