@@ -22,7 +22,7 @@ abstract contract MajorityOwned is AccessControlled {
         IERC20orERC721 ownershipToken_ = IERC20orERC721(ownershipToken());
         if (ownershipToken_.balanceOf(_msgSender()) > ownershipToken_.balanceOf(owner())) {
             _clearDelegates();
-            _transferOwnership(_msgSender());
+            transferOwnership(_msgSender());
             return true;
         }
         return false;

@@ -29,19 +29,19 @@ abstract contract AccessControlledERC721 is IERC165, IERC721, AccessControlled {
         return _requireNonZeroAddress(_ownerOf(tokenId));
     }
 
-    function transferFrom(address from, address to, uint256 tokenId) external virtual {
+    function transferFrom(address from, address to, uint256 tokenId) external virtual payable {
         _transfer(from, to, tokenId);
     }
 
-    function safeTransferFrom(address from, address to, uint256 tokenId) external virtual {
+    function safeTransferFrom(address from, address to, uint256 tokenId) external virtual payable {
         _safeTransfer(from, to, tokenId, "");
     }
 
-    function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) external virtual {
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) external virtual payable {
        _safeTransfer(from, to, tokenId, data);
     }
 
-    function approve(address to, uint256 tokenId) external virtual {
+    function approve(address to, uint256 tokenId) external virtual payable {
         address owner = _requireApproved(tokenId);
         _approvals[tokenId] = to;
         emit Approval(owner, to, tokenId);

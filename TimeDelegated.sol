@@ -38,7 +38,7 @@ abstract contract TimeDelegated is Delegated {
 
     // Overload of Delegated.addDelegate() that sets delegation for a specified number of days.
     function addDelegate(address delegate, uint expiryDays) public virtual nonZeroAddress(delegate) onlyDelegate {
-        if (expiryDays > maxExpiryDays() && _msgSender() != owner()) 
+        if (expiryDays > maxExpiryDays() && msg.sender != owner()) 
             revert("Delegates cannot add other delegates beyond time limit set by owner.");
         _expiry[delegate] = block.timestamp + (expiryDays * 1 days);
         emit DelegateAdded(delegate);

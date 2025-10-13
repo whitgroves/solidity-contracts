@@ -17,8 +17,6 @@ abstract contract AccessControlled is ERC173, Pausable, InputValidated {
     mapping(address => bool) private _isDelegate;
     mapping(address => bool) private _isBanned;
 
-    error UnauthorizedAccessRequest(address account);
-
     event DelegateAdded(address indexed delegate);
     event DelegateRemoved(address indexed delegate);
     event DelegatesCleared();

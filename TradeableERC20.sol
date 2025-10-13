@@ -13,7 +13,7 @@ abstract contract TradeableERC20 is AccessControlledERC20 {
     
     event ERC20TokensTraded(address currencyA, uint amountA, address currencyB, uint amountB);
     
-    constructor(address initialOwner) ERC20(initialOwner) {}
+    constructor(address initialOwner) AccessControlledERC20(initialOwner) {}
 
     function makeTradeOffer(address currency, uint price) external virtual {
         makeBuyOffer(currency, price);

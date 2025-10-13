@@ -18,7 +18,7 @@ abstract contract TaxableERC20 is AccessControlledERC20 {
     event TaxExemptionGranted(address account);
     event TaxExemptionRemoved(address account);
 
-    constructor(address initialOwner) ERC20(initialOwner) {
+    constructor(address initialOwner) AccessControlledERC20(initialOwner) {
         setTaxCap(MAX_TAX_RATE);
         setTaxExempt(address(0), true); // no tax on mints
     }

@@ -10,7 +10,7 @@ import {IERC20} from "./interfaces/IERC20.sol";
  * 
  * Note that this version of ERC721 also inherits Delegated, which adds delegate permissions at the contract level.
  */
-abstract contract LeasableERC721 is ERC721 {
+abstract contract LeasableERC721 is AccessControlledERC721 {
 
     mapping(uint tokenId => uint) private _maxLeaseDays;
     mapping(uint tokenId => mapping(address currency => uint)) private _pricePerDay;

@@ -24,7 +24,7 @@ abstract contract Leasable is AccessControlled {
     event LeaseRevoked(address tenant, address owner);
     
     modifier onlyOriginalOwner() virtual {
-        if (owner() != _msgSender()) revert OwnableUnauthorizedAccount(_msgSender());
+        if (owner() != _msgSender()) revert UnauthorizedAccessRequest(_msgSender());
         _;
     }
 

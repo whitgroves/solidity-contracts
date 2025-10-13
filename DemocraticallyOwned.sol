@@ -107,15 +107,15 @@ abstract contract DemocraticallyOwned is AccessControlled {
         _votesTallied = true;
         if (voteLeader_ != owner()) {
             _clearDelegates();
-            _transferOwnership(voteLeader_);
+            transferOwnership(voteLeader_);
         }
         if (_termDays > 0) _termEnd = _electionEnd + (_termDays * 1 days);
         emit VotesTallied(owner());
     }
 
-    // Instead of transferring ownership to the zero address, the owner starts a new election with no nominees.
-    // Function is limited to onlyOwner since a completed election with no nominees will transfer to the 0 address.
-    function renounceOwnership() public override onlyOwner {
+    // Instead of transferring ownership to the zero address, renouncement starts a new election with no nominees.
+    // However, a completed election with no valid candidates will still transfer ownership to the zero address.
+    function renounceOwnership() public onlyOwner {
         _startElection();
     }
 
