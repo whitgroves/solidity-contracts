@@ -37,7 +37,7 @@ abstract contract TradeableERC721 is AccessControlledERC721 {
         _requireOwnership(ownedTokenId);
         if (!IERC721(collection).supportsInterface(type(IERC721).interfaceId))
             revert("Provided collection is not supported.");
-        uint[] tradesInCollection_ = _trades[ownedTokenId][collection];
+        uint[] memory tradesInCollection_ = _trades[ownedTokenId][collection];
         for (uint i = 0; i < tradesInCollection_.length; i++) {
             if (tradesInCollection_[i] == desiredTokenId) 
                 revert("Desired token is already listed as an acceptable trade.");
@@ -51,7 +51,7 @@ abstract contract TradeableERC721 is AccessControlledERC721 {
         _requireOwnership(ownedTokenId);
         if (!IERC721(collection).supportsInterface(type(IERC721).interfaceId))
             revert("Provided collection is not supported.");
-        uint[] tradesInCollection_ = _trades[ownedTokenId][collection];
+        uint[] memory tradesInCollection_ = _trades[ownedTokenId][collection];
         bool indexFound;
         for (uint i = 0; i < tradesInCollection_.length - 1; i++) {
             if (tradesInCollection_[i] == undesiredTokenId) indexFound = true;
@@ -82,7 +82,7 @@ abstract contract TradeableERC721 is AccessControlledERC721 {
         IERC721 collection_ = IERC721(collection);
         if (!collection_.supportsInterface(type(IERC721).interfaceId)) revert("Provided collection is not supported.");
         if (!collection_.ownerOf(offeredTokenId) != _msgSender()) revert("Sender is not owner of the offered token.");
-        uint[] tradesInCollection_ = _trades[tradeableTokenId][collection];
+        uint[] memory tradesInCollection_ = _trades[tradeableTokenId][collection];
         for (uint i = 0; i < tradesInCollection_.length; i++) {
             if (tradesInCollection_[i] == offeredTokenId) {
                 address owner = _ownerOf(tradeableTokenId);
